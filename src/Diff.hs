@@ -69,14 +69,17 @@ newtype Differ x = Differ (x -> x -> DiffResult x)
 class Diff a where
   diff :: a -> a -> DiffResult a
 
-diffEq :: (Eq a) => a -> a -> DiffResult a
-diffEq a b =
+eqDiff :: (Eq a) => a -> a -> DiffResult a
+eqDiff a b =
   if a == b
     then Equal
     else Error $ DiffError TopLevelNotEqual
 
-#define DIFF_EQ(a) instance Diff a where diff = diffEq
-#define CDIFF_EQ(c,a) instance c => Diff a where diff = diffEq
+eqDiffer :: (Eq a) => Differ a
+eqDiffer = Differ eqDiff
+
+#define DIFF_EQ(a) instance Diff a where diff = eqDiff
+#define CDIFF_EQ(c,a) instance c => Diff a where diff = eqDiff
 #define GDIFF(a) instance Diff a where diff = gdiff
 #define CGDIFF(c,a) instance c => Diff a where diff = gdiff
 DIFF_EQ (Int)
@@ -93,6 +96,14 @@ gdiff ::
   a ->
   DiffResult a
 gdiff = gdiffWith $ cpure_POP (Proxy @Diff) (Differ diff)
+
+gdiffTopLevel ::
+  forall a.
+  (Generic a, HasDatatypeInfo a, All2 Eq (Code a)) =>
+  a ->
+  a ->
+  DiffResult a
+gdiffTopLevel = gdiffWith $ cpure_POP (Proxy @Eq) eqDiffer
 
 gdiffWith ::
   forall a.
@@ -224,8 +235,6 @@ instance Show (DiffErrorNested xss) where
           -- . showsNS (showsNS showsPrec) 11 nss
           . showsAtLoc showsPrec 11 al
 
-type AllCompose c f xss = All (Compose c f) xss
-
 ------------------------------------------------------------
 -- test type
 
@@ -262,4 +271,4 @@ drExps =
   ]
 
 drActs :: [(Test, Test, DiffResult Test)]
-drActs = [(t1, t2, gdiff t1 t2) | (t1, t2, _) <- drExps]
+drActs = [(t1, t2, gdiffTopLevel t1 t2) | (t1, t2, _) <- drExps]
