@@ -5,8 +5,18 @@ module Generics.Diff.Type where
 import Data.SOP.NP
 import Generics.SOP as SOP
 
-newtype DiffError a = DiffError (DiffErrorNested (Code a))
+data DiffError a where
+  Nested :: DiffErrorNested (Code a) -> DiffError a
+  DiffList :: ListDiffError a -> DiffError [a]
+
+data ListDiffError a
+  = DiffAtIndex Int (DiffError a)
+  | WrongLengths Int Int
   deriving (Show, Eq)
+
+deriving instance (Show (DiffError a))
+
+deriving instance (Eq (DiffError a))
 
 infixr 6 :*:
 

@@ -12,10 +12,12 @@ module Generics.Diff
   , gdiffTopLevel
   , gdiffWith
   , eqDiff
+  , diffListWith
 
     -- * Types
   , Differ (..)
   , DiffErrorNested (..)
+  , ListDiffError (..)
   , DiffError (..)
   , DiffResult (..)
   , AtLoc (..)
@@ -47,12 +49,24 @@ newtype Differ x = Differ (x -> x -> DiffResult x)
 
 class Diff a where
   diff :: a -> a -> DiffResult a
+  diffList :: [a] -> [a] -> DiffResult [a]
+  diffList = diffListWith diff
+
+diffListWith :: (a -> a -> DiffResult a) -> [a] -> [a] -> DiffResult [a]
+diffListWith d = go 0
+  where
+    go _ [] [] = Equal
+    go n [] ys = Error $ DiffList $ WrongLengths n (n + length ys)
+    go n xs [] = Error $ DiffList $ WrongLengths (n + length xs) n
+    go n (x : xs) (y : ys) = case d x y of
+      Equal -> go (n + 1) xs ys
+      Error err -> Error $ DiffList $ DiffAtIndex n err
 
 eqDiff :: (Eq a) => a -> a -> DiffResult a
 eqDiff a b =
   if a == b
     then Equal
-    else Error $ DiffError TopLevelNotEqual
+    else Error $ Nested TopLevelNotEqual
 
 eqDiffer :: (Eq a) => Differ a
 eqDiffer = Differ eqDiff
@@ -81,7 +95,7 @@ gdiffWith ::
   a ->
   DiffResult a
 gdiffWith (POP ds) (from -> SOP xs) (from -> SOP ys) =
-  maybe Equal (Error . DiffError) $ gdiff' (constructorInfo $ datatypeInfo $ Proxy @a) ds xs ys
+  maybe Equal (Error . Nested) $ gdiff' (constructorInfo $ datatypeInfo $ Proxy @a) ds xs ys
 
 gdiff' ::
   NP ConstructorInfo xss ->
@@ -111,11 +125,17 @@ gdiff' (_ :* is) (_ :* dss) (S xs) (S ys) = shiftDiffError <$> gdiff' is dss xs 
 #define GDIFF(a) instance Diff a where diff = gdiff
 #define CGDIFF(c,a) instance c => Diff a where diff = gdiff
 DIFF_EQ (Int)
-DIFF_EQ (Char)
 DIFF_EQ (Bool)
-DIFF_EQ (String)
 CGDIFF ((Diff a, Diff b), (Either a b))
 CGDIFF (Diff a, (Maybe a))
+
+instance (Diff a) => Diff [a] where
+  {-# SPECIALIZE instance Diff [Char] #-}
+  diff = diffList
+
+instance Diff Char where
+  diff = eqDiff
+  diffList = eqDiff
 
 ------------------------------------------------------------
 -- test type
@@ -143,12 +163,12 @@ drExps =
   ,
     ( C1 (Left 0) Nothing
     , C1 (Left 0) (Just 'a')
-    , Error (DiffError $ FieldMismatch (AtLoc (Z (Constructor "C1" :*: S (Z $ DiffError TopLevelNotEqual)))))
+    , Error (Nested $ FieldMismatch (AtLoc (Z (Constructor "C1" :*: S (Z $ Nested TopLevelNotEqual)))))
     )
   ,
     ( C1 (Left 0) Nothing
     , C2 Nothing False
-    , Error (DiffError $ WrongConstructor (Z c1Info) (S (Z c2Info)))
+    , Error (Nested $ WrongConstructor (Z c1Info) (S (Z c2Info)))
     )
   ]
 
