@@ -48,6 +48,9 @@ newtype Differ x = Differ (x -> x -> DiffResult x)
 
 class Diff a where
   diff :: a -> a -> DiffResult a
+  default diff :: (Generic a, HasDatatypeInfo a, All2 Diff (Code a)) => a -> a -> DiffResult a
+  diff = gdiff
+
   diffList :: [a] -> [a] -> DiffResult [a]
   diffList = diffListWith diff
 
@@ -125,9 +128,9 @@ instance Diff Bool where diff = eqDiff
 
 instance Diff () where diff () () = Equal
 
-instance (Diff a, Diff b) => Diff (Either a b) where diff = gdiff
+instance (Diff a, Diff b) => Diff (Either a b)
 
-instance (Diff a) => Diff (Maybe a) where diff = gdiff
+instance (Diff a) => Diff (Maybe a)
 
 instance (Diff a) => Diff [a] where
   {-# SPECIALIZE instance Diff [Char] #-}
