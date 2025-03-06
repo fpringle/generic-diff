@@ -53,12 +53,8 @@ showsAtLoc f d (AtLoc ns) =
     showString "AtLoc "
       . showsNS (showsPair showsConstructorInfo (showsNS f)) 11 ns
 
-eqNP :: forall f xs. (forall x. f x -> f x -> Bool) -> NP f xs -> NP f xs -> Bool
-eqNP eq = go
-  where
-    go :: forall ys. NP f ys -> NP f ys -> Bool
-    go Nil Nil = True
-    go (x :* xs) (y :* ys) = eq x y && go xs ys
+eqNP :: forall f xs. (SListI xs) => (forall x. f x -> f x -> Bool) -> NP f xs -> NP f xs -> Bool
+eqNP eq l r = and $ collapse_NP $ liftA2_NP (\x y -> K (eq x y)) l r
 
 showsNP :: forall f xs. (forall x. Int -> f x -> ShowS) -> Int -> NP f xs -> ShowS
 showsNP _ _ Nil = showString "Nil"
@@ -70,13 +66,7 @@ showsNP s d ns = go d ns
       x :* xs -> showParen (p > 5) $ s 6 x . showString " :* " . go 5 xs
 
 eqNS :: forall f xs. (forall x. f x -> f x -> Bool) -> NS f xs -> NS f xs -> Bool
-eqNS eq = go
-  where
-    go :: forall ys. NS f ys -> NS f ys -> Bool
-    go (Z x) (Z y) = eq x y
-    go (Z _) (S _) = False
-    go (S _) (Z _) = False
-    go (S xs) (S ys) = go xs ys
+eqNS eq = compare_NS False eq False
 
 showsNS :: forall f xs. (forall x. Int -> f x -> ShowS) -> Int -> NS f xs -> ShowS
 showsNS s = go
