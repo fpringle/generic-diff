@@ -2,6 +2,7 @@
 
 module Generics.Diff.Instances where
 
+import qualified Data.List.NonEmpty as NE
 import Generics.Diff.Class
 import Generics.Diff.Type
 
@@ -22,3 +23,6 @@ instance (Diff a) => Diff [a] where
 instance Diff Char where
   diff = eqDiff
   diffList = eqDiff
+
+instance (Diff a) => Diff (NE.NonEmpty a) where
+  diff l r = diffListWith DiffNonEmpty diff (NE.toList l) (NE.toList r)

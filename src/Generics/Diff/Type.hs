@@ -2,6 +2,7 @@
 
 module Generics.Diff.Type where
 
+import Data.List.NonEmpty
 import Data.SOP.NP
 import Generics.SOP as SOP
 
@@ -10,6 +11,7 @@ newtype Differ x = Differ (x -> x -> DiffResult x)
 data DiffError a where
   Nested :: DiffErrorNested (Code a) -> DiffError a
   DiffList :: ListDiffError a -> DiffError [a]
+  DiffNonEmpty :: ListDiffError a -> DiffError (NonEmpty a)
 
 data ListDiffError a
   = DiffAtIndex Int (DiffError a)

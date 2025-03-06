@@ -34,17 +34,17 @@ class Diff a where
   diff = gdiff
 
   diffList :: [a] -> [a] -> DiffResult [a]
-  diffList = diffListWith diff
+  diffList = diffListWith DiffList diff
 
-diffListWith :: (a -> a -> DiffResult a) -> [a] -> [a] -> DiffResult [a]
-diffListWith d = go 0
+diffListWith :: (ListDiffError a -> DiffError b) -> (a -> a -> DiffResult a) -> [a] -> [a] -> DiffResult b
+diffListWith f d = go 0
   where
     go _ [] [] = Equal
-    go n [] ys = Error $ DiffList $ WrongLengths n (n + length ys)
-    go n xs [] = Error $ DiffList $ WrongLengths (n + length xs) n
+    go n [] ys = Error $ f $ WrongLengths n (n + length ys)
+    go n xs [] = Error $ f $ WrongLengths (n + length xs) n
     go n (x : xs) (y : ys) = case d x y of
       Equal -> go (n + 1) xs ys
-      Error err -> Error $ DiffList $ DiffAtIndex n err
+      Error err -> Error $ f $ DiffAtIndex n err
 
 eqDiff :: (Eq a) => a -> a -> DiffResult a
 eqDiff a b =
