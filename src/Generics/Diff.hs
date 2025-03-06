@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableSuperClasses #-}
 {-# OPTIONS_GHC -Wno-partial-fields -Wno-redundant-constraints #-}
@@ -120,14 +119,15 @@ gdiff' (_ :* is) (_ :* dss) (S xs) (S ys) = shiftDiffError <$> gdiff' is dss xs 
 ------------------------------------------------------------
 -- instances
 
-#define DIFF_EQ(a) instance Diff a where diff = eqDiff
-#define CDIFF_EQ(c,a) instance c => Diff a where diff = eqDiff
-#define GDIFF(a) instance Diff a where diff = gdiff
-#define CGDIFF(c,a) instance c => Diff a where diff = gdiff
-DIFF_EQ (Int)
-DIFF_EQ (Bool)
-CGDIFF ((Diff a, Diff b), (Either a b))
-CGDIFF (Diff a, (Maybe a))
+instance Diff Int where diff = eqDiff
+
+instance Diff Bool where diff = eqDiff
+
+instance Diff () where diff () () = Equal
+
+instance (Diff a, Diff b) => Diff (Either a b) where diff = gdiff
+
+instance (Diff a) => Diff (Maybe a) where diff = gdiff
 
 instance (Diff a) => Diff [a] where
   {-# SPECIALIZE instance Diff [Char] #-}
