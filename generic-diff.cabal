@@ -63,9 +63,9 @@ library
     , deps
     , extensions
   exposed-modules:
-      Diff
-      Diff.Generic
-      Diff.Type
+      Generics.Diff
+  other-modules:
+      Generics.Diff.Type
 
   -- other-modules:
   -- other-extensions:
