@@ -23,6 +23,7 @@ common deps
     , base >= 4
     , sop-core
     , generics-sop
+    , text
 
 common extensions
   default-extensions:
@@ -80,11 +81,12 @@ test-suite generic-diff-test
     , deps
     , extensions
   default-language: Haskell2010
-  -- other-modules:
   -- other-extensions:
   type:             exitcode-stdio-1.0
   hs-source-dirs:   test
   main-is:          Spec.hs
+  other-modules:
+    Generics.Diff.UnitTestsSpec
   build-tool-depends:
       hspec-discover:hspec-discover
   ghc-options:      -Wno-orphans
