@@ -5,9 +5,12 @@ module Generics.Diff.UnitTestsSpec where
 import Data.Foldable
 import Data.SOP
 import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy.Builder as TB
 import qualified GHC.Generics as G
 import Generics.Diff
 import Generics.Diff.Instances ()
+import Generics.Diff.Render
 import Generics.SOP
 import qualified Test.Hspec as H
 import qualified Test.Hspec.QuickCheck as H
@@ -22,7 +25,7 @@ specTestSet :: (Diff a, Show a) => TestSet a -> H.Spec
 specTestSet TestSet {..} =
   let actualDiffResult = diff leftValue rightValue
       eq = expectedDiffResult == actualDiffResult
-      showDiffResult = show
+      showDiffResult = TL.unpack . TB.toLazyText . renderDiffResult
       addLabel =
         if eq
           then Q.property
