@@ -110,7 +110,7 @@ testSets =
       { setName = "Diff, FieldMismatch, Infix constructor, left side, nested"
       , leftValue = ('a', 4, ()) `Con3` [Just 1]
       , rightValue = ('a', 5, ()) `Con3` [Nothing, Just 1]
-      , expectedDiffResult = Error (Nested $ FieldMismatch (AtLoc (S (S (Z (c3Info :*: Z (Nested $ FieldMismatch $ AtLoc $ Z (Constructor "(,,)" :*: S (Z (Nested TopLevelNotEqual))))))))))
+      , expectedDiffResult = Error (Nested $ FieldMismatch (AtLoc (S (S (Z (c3Info :*: Z (Nested $ FieldMismatch $ AtLoc $ Z (Constructor "(,,)" :*: S (Z TopLevelNotEqual)))))))))
       }
   , TestSet
       { setName = "Diff, FieldMismatch, recursive"

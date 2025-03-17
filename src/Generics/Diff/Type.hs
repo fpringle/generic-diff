@@ -9,6 +9,7 @@ import Generics.SOP as SOP
 newtype Differ x = Differ (x -> x -> DiffResult x)
 
 data DiffError a where
+  TopLevelNotEqual :: DiffError a
   Nested :: DiffErrorNested (Code a) -> DiffError a
   DiffList :: ListDiffError a -> DiffError [a]
   DiffNonEmpty :: ListDiffError a -> DiffError (NonEmpty a)
@@ -28,8 +29,7 @@ data (f :*: g) a = f a :*: g a
   deriving (Show, Eq)
 
 data DiffErrorNested xss
-  = TopLevelNotEqual
-  | WrongConstructor (NS ConstructorInfo xss) (NS ConstructorInfo xss)
+  = WrongConstructor (NS ConstructorInfo xss) (NS ConstructorInfo xss)
   | FieldMismatch (AtLoc DiffError xss)
 
 data DiffResult a
@@ -120,7 +120,6 @@ showsConstructorInfo d =
         . showsNP showsPrec 11 fields
 
 instance Eq (DiffErrorNested xss) where
-  TopLevelNotEqual == TopLevelNotEqual = True
   WrongConstructor l1 r1 == WrongConstructor l2 r2 =
     eqNS eqConstructorInfo l1 l2 && eqNS eqConstructorInfo r1 r2
   FieldMismatch al1 == FieldMismatch al2 = eqAtLoc (==) al1 al2
@@ -128,7 +127,6 @@ instance Eq (DiffErrorNested xss) where
 
 instance Show (DiffErrorNested xss) where
   showsPrec d = \case
-    TopLevelNotEqual -> showString "TopLevelNotEqual"
     WrongConstructor l r ->
       showParen (d > 10) $
         showString "WrongConstructor "

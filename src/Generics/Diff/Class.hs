@@ -24,7 +24,6 @@ shiftAtLoc (AtLoc ns) = AtLoc (S ns)
 
 shiftDiffError :: DiffErrorNested xs -> DiffErrorNested (x ': xs)
 shiftDiffError = \case
-  TopLevelNotEqual -> TopLevelNotEqual
   WrongConstructor xs ys -> WrongConstructor (S xs) (S ys)
   FieldMismatch atLoc -> FieldMismatch (shiftAtLoc atLoc)
 
@@ -50,7 +49,7 @@ eqDiff :: (Eq a) => a -> a -> DiffResult a
 eqDiff a b =
   if a == b
     then Equal
-    else Error $ Nested TopLevelNotEqual
+    else Error TopLevelNotEqual
 
 eqDiffer :: (Eq a) => Differ a
 eqDiffer = Differ eqDiff
