@@ -19,8 +19,8 @@ import Data.SOP.NP
 import Generics.Diff.Type
 import Generics.SOP
 
-shiftAtLoc :: AtLoc f xs -> AtLoc f (x ': xs)
-shiftAtLoc (AtLoc ns) = AtLoc (S ns)
+shiftAtLoc :: DiffAtField xs -> DiffAtField (x ': xs)
+shiftAtLoc (DiffAtField ns) = DiffAtField (S ns)
 
 shiftDiffError :: DiffErrorNested xs -> DiffErrorNested (x ': xs)
 shiftDiffError = \case
@@ -88,7 +88,7 @@ gdiff' ::
   Maybe (DiffErrorNested xss)
 gdiff' _ Nil xss _ = case xss of {}
 gdiff' (i :* _) (ds :* _) (Z xs) (Z ys) =
-  FieldMismatch . AtLoc . Z . (i :*:) <$> goProduct ds xs ys
+  FieldMismatch . DiffAtField . Z . (i :*:) <$> goProduct ds xs ys
   where
     goProduct :: forall as. NP Differ as -> NP I as -> NP I as -> Maybe (NS DiffError as)
     goProduct Nil Nil Nil = Nothing

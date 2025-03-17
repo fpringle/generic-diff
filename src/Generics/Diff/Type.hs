@@ -30,14 +30,14 @@ data (f :*: g) a = f a :*: g a
 
 data DiffErrorNested xss
   = WrongConstructor (NS ConstructorInfo xss) (NS ConstructorInfo xss)
-  | FieldMismatch (AtLoc DiffError xss)
+  | FieldMismatch (DiffAtField xss)
 
 data DiffResult a
   = Error (DiffError a)
   | Equal
   deriving (Show, Eq)
 
-newtype AtLoc f xss = AtLoc (NS (ConstructorInfo :*: NS f) xss)
+newtype DiffAtField xss = DiffAtField (NS (ConstructorInfo :*: NS DiffError) xss)
 
 ------------------------------------------------------------
 -- Instance madness
@@ -53,19 +53,15 @@ showsPair onF onG d (fa :*: ga) =
       . showString " :*: "
       . onG 5 ga
 
-eqAtLoc :: (forall x. f x -> f x -> Bool) -> AtLoc f xss -> AtLoc f xss -> Bool
-eqAtLoc f (AtLoc mss) (AtLoc nss) =
-  eqNS (eqPair eqConstructorInfo (eqNS f)) mss nss
+instance Eq (DiffAtField xss) where
+  DiffAtField mss == DiffAtField nss =
+    eqNS (eqPair eqConstructorInfo (eqNS (==))) mss nss
 
-showsAtLoc ::
-  (forall x. Int -> f x -> ShowS) ->
-  Int ->
-  AtLoc f xss ->
-  ShowS
-showsAtLoc f d (AtLoc ns) =
-  showParen (d > 10) $
-    showString "AtLoc "
-      . showsNS (showsPair showsConstructorInfo (showsNS f)) 11 ns
+instance Show (DiffAtField xss) where
+  showsPrec d (DiffAtField ns) =
+    showParen (d > 10) $
+      showString "DiffAtField "
+        . showsNS (showsPair showsConstructorInfo (showsNS showsPrec)) 11 ns
 
 eqNP :: forall f xs. (SListI xs) => (forall x. f x -> f x -> Bool) -> NP f xs -> NP f xs -> Bool
 eqNP eq l r = and $ collapse_NP $ liftA2_NP (\x y -> K (eq x y)) l r
@@ -122,7 +118,7 @@ showsConstructorInfo d =
 instance Eq (DiffErrorNested xss) where
   WrongConstructor l1 r1 == WrongConstructor l2 r2 =
     eqNS eqConstructorInfo l1 l2 && eqNS eqConstructorInfo r1 r2
-  FieldMismatch al1 == FieldMismatch al2 = eqAtLoc (==) al1 al2
+  FieldMismatch al1 == FieldMismatch al2 = al1 == al2
   _ == _ = False
 
 instance Show (DiffErrorNested xss) where
@@ -136,7 +132,7 @@ instance Show (DiffErrorNested xss) where
     FieldMismatch al ->
       showParen (d > 10) $
         showString "FieldMismatch "
-          . showsAtLoc showsPrec 11 al
+          . showsPrec 11 al
 
 pickOut :: NP f xs -> NS g xs -> NS f xs
 pickOut Nil gs = case gs of {}

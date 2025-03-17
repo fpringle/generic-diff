@@ -98,25 +98,25 @@ testSets =
       { setName = "Diff, FieldMismatch, normal Constructor, nested"
       , leftValue = Con1 (Left 0) Nothing
       , rightValue = Con1 (Left 0) (Just 'a')
-      , expectedDiffResult = Error (Nested $ FieldMismatch (AtLoc (Z (c1Info :*: S (Z $ Nested (WrongConstructor (Z nothingInfo) (S (Z justInfo))))))))
+      , expectedDiffResult = Error (Nested $ FieldMismatch (DiffAtField (Z (c1Info :*: S (Z $ Nested (WrongConstructor (Z nothingInfo) (S (Z justInfo))))))))
       }
   , TestSet
       { setName = "Diff, FieldMismatch, Infix constructor, right side, nested"
       , leftValue = ('a', 5, ()) `Con3` [Just 1]
       , rightValue = ('a', 5, ()) `Con3` [Nothing, Just 1]
-      , expectedDiffResult = Error (Nested $ FieldMismatch (AtLoc (S (S (Z (c3Info :*: S (Z $ DiffList (DiffAtIndex 0 (Nested (WrongConstructor (S (Z justInfo)) (Z nothingInfo)))))))))))
+      , expectedDiffResult = Error (Nested $ FieldMismatch (DiffAtField (S (S (Z (c3Info :*: S (Z $ DiffList (DiffAtIndex 0 (Nested (WrongConstructor (S (Z justInfo)) (Z nothingInfo)))))))))))
       }
   , TestSet
       { setName = "Diff, FieldMismatch, Infix constructor, left side, nested"
       , leftValue = ('a', 4, ()) `Con3` [Just 1]
       , rightValue = ('a', 5, ()) `Con3` [Nothing, Just 1]
-      , expectedDiffResult = Error (Nested $ FieldMismatch (AtLoc (S (S (Z (c3Info :*: Z (Nested $ FieldMismatch $ AtLoc $ Z (Constructor "(,,)" :*: S (Z TopLevelNotEqual)))))))))
+      , expectedDiffResult = Error (Nested $ FieldMismatch (DiffAtField (S (S (Z (c3Info :*: Z (Nested $ FieldMismatch $ DiffAtField $ Z (Constructor "(,,)" :*: S (Z TopLevelNotEqual)))))))))
       }
   , TestSet
       { setName = "Diff, FieldMismatch, recursive"
       , leftValue = Con4 value1 leftValue2
       , rightValue = Con4 value1 rightValue2
-      , expectedDiffResult = Error (Nested $ FieldMismatch (AtLoc (S (S (S (Z (c4Info :*: S (Z error2))))))))
+      , expectedDiffResult = Error (Nested $ FieldMismatch (DiffAtField (S (S (S (Z (c4Info :*: S (Z error2))))))))
       }
   ]
   where

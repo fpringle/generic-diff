@@ -17,7 +17,7 @@ module Generics.Diff
   , ListDiffError (..)
   , DiffError (..)
   , DiffResult (..)
-  , AtLoc (..)
+  , DiffAtField (..)
   , (:*:) (..)
   )
 where
