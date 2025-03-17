@@ -1,3 +1,7 @@
+{- | The types in 'Generic.Diff' have derived 'Show' instances that don't help at all in
+one of the goals for the library, which is readability. This module lets us render those types
+in a friendly way.
+-}
 module Generics.Diff.Render
   ( -- * Rendering
     renderDiffResult
@@ -31,12 +35,19 @@ import Generics.Diff.Type
 import Generics.SOP as SOP
 import Numeric.Natural
 
+{- | Configuration type used to tweak the output of 'renderDiffResultWith'.
+
+Use 'defaultRenderOpts' and the field accessors below to construct.
+-}
 data RenderOpts = RenderOpts
   { indentSize :: Natural
+  -- ^ How many spaces to indent each new "level" of comparison.
   , numberedLevels :: Bool
+  -- ^ Whether or not to include level numbers in the output.
   }
   deriving (Show)
 
+-- | Sensible rendering defaults. No numbers, 2-space indentation.
 defaultRenderOpts :: RenderOpts
 defaultRenderOpts =
   RenderOpts
@@ -44,39 +55,51 @@ defaultRenderOpts =
     , numberedLevels = False
     }
 
+-- | Print a 'DiffResult' to the terminal.
 printDiffResult :: DiffResult a -> IO ()
 printDiffResult = printDiffResultWith defaultRenderOpts
 
+-- | Print a 'DiffResult' to the terminal, using custom 'RenderOpts'.
 printDiffResultWith :: RenderOpts -> DiffResult a -> IO ()
 printDiffResultWith opts =
-  TL.putStrLn . (<> "\n") . TB.toLazyText . renderDiffResultWith opts
+  TL.putStrLn . TB.toLazyText . renderDiffResultWith opts
 
+-- | Render a 'DiffResult' using a lazy 'TB.Builder'.
 renderDiffResult :: DiffResult a -> TB.Builder
 renderDiffResult = renderDiffResultWith defaultRenderOpts
 
+-- | Render a 'DiffResult' using a lazy 'TB.Builder', using custom 'RenderOpts'.
 renderDiffResultWith :: RenderOpts -> DiffResult a -> TB.Builder
 renderDiffResultWith opts = renderRDiffResultWith opts . diffResultR
 
+-- | Render a 'DiffError' using a lazy 'TB.Builder'.
 renderDiffError :: DiffError a -> TB.Builder
 renderDiffError = renderDiffErrorWith defaultRenderOpts
 
+-- | Render a 'DiffError' using a lazy 'TB.Builder', using custom 'RenderOpts'.
 renderDiffErrorWith :: RenderOpts -> DiffError a -> TB.Builder
 renderDiffErrorWith opts = renderRDiffErrorWith opts 0 . diffErrorR
 
+-- | Render a 'DiffErrorNested' using a lazy 'TB.Builder'.
 renderDiffErrorNested :: DiffErrorNested xss -> TB.Builder
 renderDiffErrorNested = renderDiffErrorNestedWith defaultRenderOpts
 
+-- | Render a 'DiffErrorNested' using a lazy 'TB.Builder', using custom 'RenderOpts'.
 renderDiffErrorNestedWith :: RenderOpts -> DiffErrorNested xss -> TB.Builder
 renderDiffErrorNestedWith opts = renderRDiffErrorNested opts 0 . diffErrorNestedR
 
+-- | Render a 'ListDiffError' using a lazy 'TB.Builder'.
 renderListDiffError :: ListDiffError xss -> TB.Builder
 renderListDiffError = renderListDiffErrorWith defaultRenderOpts
 
+-- | Render a 'ListDiffError' using a lazy 'TB.Builder', using custom 'RenderOpts'.
 renderListDiffErrorWith :: RenderOpts -> ListDiffError xss -> TB.Builder
 renderListDiffErrorWith opts = renderRListDiffError opts "list" 0 . listDiffErrorR
 
 ------------------------------------------------------------
 -- Intermediate representation
+-- Rendering a 'DiffResult' happens in two steps: converting our strict SOP types into a much simpler
+-- intermediate representation, and then laying them out in a nice way.
 
 type RConstructorName = TB.Builder
 

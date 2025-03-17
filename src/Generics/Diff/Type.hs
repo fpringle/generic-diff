@@ -6,17 +6,37 @@ import Data.List.NonEmpty
 import Data.SOP.NP
 import Generics.SOP as SOP
 
+{- | A newtype wrapping a binary function producing a 'DiffResult'.
+The only reason for this newtype is so that we can use it as a functor with the types from
+@generic-sop@.
+-}
 newtype Differ x = Differ (x -> x -> DiffResult x)
 
+{- | A GADT representing an error during the diff algorithm - i.e. this tells us where and how two values differ.
+
+The special constructors for list are so that we can treat these types a bit uniquely. See 'ListDiffError'.
+-}
 data DiffError a where
+  -- | All we can say is that the values being compared are not equal.
   TopLevelNotEqual :: DiffError a
+  -- | We've identified a diff at a certain constructor or field
   Nested :: DiffErrorNested (Code a) -> DiffError a
+  -- | Special case for lists
   DiffList :: ListDiffError a -> DiffError [a]
+  -- | Special case for non-empty lists
   DiffNonEmpty :: ListDiffError a -> DiffError (NonEmpty a)
 
+{- | If we did a normal 'Generics.Diff.gdiff' on a linked list, we'd have to recurse through one "level" of
+'Generics.Diff.Diff's for each element of the input lists. The output would be really hard to read or understand.
+Therefore this type lets us treat lists as a special case, depending on how they differ.
+-}
 data ListDiffError a
-  = DiffAtIndex Int (DiffError a)
-  | WrongLengths Int Int
+  = -- | If we find a difference when comparing the two lists pointwise, we report the index of the
+    -- error and the error caused by the elements at that index of the input lists.
+    DiffAtIndex Int (DiffError a)
+  | -- | The two lists have different lengths. If we get a 'WrongLengths' instead of an 'Equal' or a
+    -- 'DiffAtIndex' , we know that one of the lists must be a subset of the other.
+    WrongLengths Int Int
   deriving (Show, Eq)
 
 deriving instance (Show (DiffError a))
@@ -25,18 +45,32 @@ deriving instance (Eq (DiffError a))
 
 infixr 6 :*:
 
+-- | Lifted product of functors. We could have used 'Data.Functor.Product.Product', but this is more concise.
 data (f :*: g) a = f a :*: g a
   deriving (Show, Eq)
 
+{- | This is where we actually detail the difference between two values, and where in their structure the
+difference is.
+-}
 data DiffErrorNested xss
-  = WrongConstructor (NS ConstructorInfo xss) (NS ConstructorInfo xss)
-  | FieldMismatch (DiffAtField xss)
+  = -- | The two input values use different constructor, which are included.
+    WrongConstructor (NS ConstructorInfo xss) (NS ConstructorInfo xss)
+  | -- | The inputs use the same constructor, but differ at one of the fields.
+    -- 'DiffAtField' will tell us where and how.
+    FieldMismatch (DiffAtField xss)
 
+-- | The result of a 'Generics.Diff.diff'.
 data DiffResult a
-  = Error (DiffError a)
-  | Equal
+  = -- | There's a diff, here it is
+    Error (DiffError a)
+  | -- | No diff, inputs are equal
+    Equal
   deriving (Show, Eq)
 
+{- | In the case that two values have the same constructor but differ at a certain field, we want two
+report two things: what the 'DiffError' is at that field, and exactly where that field is. Careful use
+of 'NS' gives us both of those things.
+-}
 newtype DiffAtField xss = DiffAtField (NS (ConstructorInfo :*: NS DiffError) xss)
 
 ------------------------------------------------------------

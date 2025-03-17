@@ -2,6 +2,15 @@
 {-# LANGUAGE EmptyCase #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
+{- | Here we define orphan instances for as many @base@ types as we can. These fall into a few categories:
+
+- Primitive types e.g. 'Char' and 'Int' - these typically don't have Generic instances, so we use 'eqDiff'
+- Opaque types that don't expose constructors, so we couldn't write hand-rolled instances if we want to -
+  all we have is an 'Eq' instance, so again we use 'eqDiff'.
+- Compound types e.g. 'Maybe' and 'Either' - these have 'Generic' instances so we can just use 'gdiff'.
+- List-like types such as @[a]@ and @'NE.NonEmpty' a@ - these we give slightly special treatment, since they're
+  so ubiquitous and 'gdiff' would produce very hard-to-read output.
+-}
 module Generics.Diff.Instances where
 
 import Control.Applicative
@@ -40,7 +49,7 @@ import Numeric.Natural
 import System.IO
 import qualified Type.Reflection as TR
 
--- primitive(ish) types - these typically don't have Generic instances, so we use eqDiff
+-- primitive(ish) types
 
 {- FOURMOLU_DISABLE -}
 
