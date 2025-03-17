@@ -5,16 +5,13 @@ module Generics.Diff.UnitTestsSpec where
 import Data.Foldable
 import Data.SOP
 import qualified Data.Text as T
-import qualified Data.Text.Lazy as TL
-import qualified Data.Text.Lazy.Builder as TB
 import qualified GHC.Generics as G
 import Generics.Diff
 import Generics.Diff.Instances ()
-import Generics.Diff.Render
 import Generics.SOP
 import qualified Test.Hspec as H
 import qualified Test.Hspec.QuickCheck as H
-import qualified Test.QuickCheck as Q
+import Util
 
 spec :: H.Spec
 spec =
@@ -23,18 +20,8 @@ spec =
 
 specTestSet :: (Diff a, Show a) => TestSet a -> H.Spec
 specTestSet TestSet {..} =
-  let actualDiffResult = diff leftValue rightValue
-      eq = expectedDiffResult == actualDiffResult
-      showDiffResult = TL.unpack . TB.toLazyText . renderDiffResult
-      addLabel =
-        if eq
-          then Q.property
-          else
-            Q.counterexample ("Expected DiffResult:\n" <> showDiffResult expectedDiffResult)
-              . Q.counterexample ("Actual DiffResult:\n" <> showDiffResult actualDiffResult)
-              . Q.counterexample ("Left value:\n" <> show leftValue)
-              . Q.counterexample ("Right value:\n" <> show rightValue)
-  in  H.prop (T.unpack setName) $ addLabel eq
+  H.prop (T.unpack setName) $
+    propDiffResult leftValue rightValue expectedDiffResult
 
 ------------------------------------------------------------
 -- test type

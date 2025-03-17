@@ -88,6 +88,8 @@ test-suite generic-diff-test
   main-is:          Spec.hs
   other-modules:
     Generics.Diff.UnitTestsSpec
+    Generics.Diff.PropertyTestsSpec
+    Util
   build-tool-depends:
       hspec-discover:hspec-discover
   ghc-options:      -Wno-orphans
