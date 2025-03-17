@@ -19,13 +19,10 @@ import Data.SOP.NP
 import Generics.Diff.Type
 import Generics.SOP
 
-shiftAtLoc :: DiffAtField xs -> DiffAtField (x ': xs)
-shiftAtLoc (DiffAtField ns) = DiffAtField (S ns)
-
 shiftDiffError :: DiffErrorNested xs -> DiffErrorNested (x ': xs)
 shiftDiffError = \case
   WrongConstructor xs ys -> WrongConstructor (S xs) (S ys)
-  FieldMismatch atLoc -> FieldMismatch (shiftAtLoc atLoc)
+  FieldMismatch (DiffAtField ns) -> FieldMismatch (DiffAtField (S ns))
 
 class Diff a where
   diff :: a -> a -> DiffResult a
