@@ -65,10 +65,10 @@ library
     , extensions
   exposed-modules:
       Generics.Diff
-      Generics.Diff.Class
       Generics.Diff.Instances
       Generics.Diff.Render
   other-modules:
+      Generics.Diff.Class
       Generics.Diff.Type
 
   -- other-modules:
