@@ -1,14 +1,19 @@
 cabal-version:      3.0
 name:               generic-diff
 version:            0.1.0.0
--- synopsis:
--- description:
+synopsis:           Generic structural diffs
+description:
+  Generic structural diffs on arbitrary datatypes,
+  using [generics-sop](https://hackage.haskell.org/package/generics-sop).
+
+  See the module documentation in "Generics.Diff".
 license:            BSD-3-Clause
 license-file:       LICENSE
 author:             Frederick Pringle
 maintainer:         freddyjepringle@gmail.com
 copyright:          Copyright(c) Frederick Pringle 2025
 homepage:           https://github.com/fpringle/generic-diff
+category:           Generics, Test
 build-type:         Simple
 extra-doc-files:    CHANGELOG.md
 tested-with:
@@ -22,51 +27,42 @@ tested-with:
   GHC == 8.10.7
   GHC == 8.6.5
 
+source-repository head
+  type:     git
+  location: https://github.com/fpringle/generic-diff.git
+
 common warnings
-  ghc-options:
-    -Wall -Wcompat -Widentities -Wincomplete-uni-patterns
-    -Wincomplete-record-updates -Wredundant-constraints
-    -fhide-source-paths -Wpartial-fields -Wno-unused-do-bind
+  ghc-options: -Wall
 
 common deps
   build-depends:
-    , base >= 4
-    , sop-core
-    , generics-sop
-    , text
+    , base >= 4 && < 5
+    , sop-core >= 0.4.0.1 && < 0.6
+    , generics-sop >= 0.4 && < 0.6
+    , text >= 1.1 && < 2.2
 
 common extensions
   default-extensions:
-    BangPatterns
+    AllowAmbiguousTypes
+    ConstraintKinds
+    DataKinds
+    DefaultSignatures
     DeriveGeneric
-    DerivingVia 
     FlexibleContexts
     FlexibleInstances
     GADTs
-    InstanceSigs
     LambdaCase
-    MultiParamTypeClasses
-    NamedFieldPuns
     OverloadedStrings
-    PackageImports
+    PolyKinds
+    RankNTypes
     RecordWildCards
     ScopedTypeVariables
-    TupleSections
-    TypeApplications
-    ViewPatterns
-    RankNTypes
-    UndecidableInstances
-    KindSignatures
-    DataKinds
-    StandaloneKindSignatures
-    AllowAmbiguousTypes
-    DefaultSignatures
-    PolyKinds
-    TypeFamilies
-    ConstraintKinds
     StandaloneDeriving
-    Arrows
+    TypeApplications
+    TypeFamilies
     TypeOperators
+    UndecidableInstances
+    ViewPatterns
 
 library
   import:
@@ -81,8 +77,6 @@ library
       Generics.Diff.Class
       Generics.Diff.Type
 
-  -- other-modules:
-  -- other-extensions:
   hs-source-dirs:   src
   default-language: Haskell2010
 
@@ -92,7 +86,6 @@ test-suite generic-diff-test
     , deps
     , extensions
   default-language: Haskell2010
-  -- other-extensions:
   type:             exitcode-stdio-1.0
   hs-source-dirs:   test
   main-is:          Spec.hs
