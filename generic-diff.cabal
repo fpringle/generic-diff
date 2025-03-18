@@ -16,6 +16,7 @@ homepage:           https://github.com/fpringle/generic-diff
 category:           Generics, Test
 build-type:         Simple
 extra-doc-files:    CHANGELOG.md
+                    README.md
 tested-with:
   GHC == 9.12.2
   GHC == 9.10.1
