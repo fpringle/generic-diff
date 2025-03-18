@@ -15,7 +15,13 @@ module Generics.Diff.Instances where
 
 import Control.Applicative
 import Control.Concurrent
+import Control.Exception
+#if MIN_VERSION_base(4,17,0)
+import Data.Array.Byte
+#endif
+import Data.Char
 import Data.Complex
+import Data.Data
 import Data.Fixed
 import qualified Data.Functor.Compose as F
 import Data.Functor.Identity
@@ -34,23 +40,52 @@ import qualified Data.Text as T
 import Data.Text.Encoding.Error (UnicodeException)
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Builder as TLB
-import Data.Typeable
+import Data.Type.Coercion
+#if MIN_VERSION_base(4,16,0)
+import Data.Type.Ord
+#endif
 import Data.Unique
 import Data.Version
 import Data.Void
 import Data.Word
+import Numeric.Natural
+#if MIN_VERSION_base(4,18,0)
+import Foreign.C.ConstPtr
+#endif
+import Foreign.C.Error
 import Foreign.C.Types
 import Foreign.ForeignPtr
 import Foreign.Ptr
 import Foreign.StablePtr
+import GHC.Arr
+import GHC.Base
+import GHC.ByteOrder
 import GHC.Conc
 import GHC.Event
+import GHC.Fingerprint
+import qualified GHC.Generics as G
+import GHC.IO.Buffer
+import GHC.IO.Device
+import GHC.IOArray
+#if MIN_VERSION_base(4,18,0)
+import GHC.InfoProv
+#endif
 import GHC.StableName
+import GHC.Stack
+#if MIN_VERSION_base(4,17,0)
+import GHC.Stack.CloneStack
+#endif
+import GHC.TypeLits
 import Generics.Diff.Class
 import Generics.Diff.Type
 import Generics.SOP
-import Numeric.Natural
+import System.Exit
 import System.IO
+import System.IO.Error
+#if MIN_VERSION_base(4,14,0)
+import System.Timeout
+#endif
+import Text.Read (Lexeme)
 import qualified Type.Reflection as TR
 
 -- primitive(ish) types
@@ -142,6 +177,68 @@ instance Diff T.Text where diff = eqDiff
 instance Diff TL.Text where diff = eqDiff
 instance Diff TLB.Builder where diff = eqDiff
 instance Diff UnicodeException where diff = eqDiff
+
+instance Diff ArithException where diff = eqDiff
+instance Diff ArrayException where diff = eqDiff
+instance Diff Associativity where diff = eqDiff
+instance Diff AsyncException where diff = eqDiff
+instance Diff BlockReason where diff = eqDiff
+instance Diff BufferMode where diff = eqDiff
+instance Diff BufferState where diff = eqDiff
+#if MIN_VERSION_base(4,17,0)
+instance Diff ByteArray where diff = eqDiff
+#endif
+instance Diff ByteOrder where diff = eqDiff
+instance Diff CBool where diff = eqDiff
+instance Diff (Coercion a b) where diff = eqDiff
+#if MIN_VERSION_base(4,18,0)
+instance Diff (ConstPtr a) where diff = eqDiff
+#endif
+instance Diff DataRep where diff = eqDiff
+instance Diff G.DecidedStrictness where diff = eqDiff
+instance Diff Errno where diff = eqDiff
+instance Diff ErrorCall where diff = eqDiff
+instance Diff ExitCode where diff = eqDiff
+instance Diff FdKey where diff = eqDiff
+instance Diff Fingerprint where diff = eqDiff
+instance Diff G.Fixity where diff = eqDiff
+instance Diff GeneralCategory where diff = eqDiff
+#if MIN_VERSION_base(4,18,0)
+instance Diff InfoProv where diff = eqDiff
+#endif
+instance Diff (IOArray i e) where diff = eqDiff
+instance Diff IODeviceType where diff = eqDiff
+instance Diff IOErrorType where diff = eqDiff
+instance Diff IOException where diff = eqDiff
+instance Diff IOMode where diff = eqDiff
+instance Diff Lexeme where diff = eqDiff
+instance Diff Lifetime where diff = eqDiff
+instance Diff MaskingState where diff = eqDiff
+#if MIN_VERSION_base(4,17,0)
+instance Diff (MutableByteArray a) where diff = eqDiff
+#endif
+instance Diff NewlineMode where diff = eqDiff
+instance Diff Newline where diff = eqDiff
+#if MIN_VERSION_base(4,16,0)
+instance Diff (OrderingI a b) where diff = eqDiff
+#endif
+instance Diff SeekMode where diff = eqDiff
+#if MIN_VERSION_base(4,16,0)
+instance Diff SomeChar where diff = eqDiff
+#endif
+instance Diff SomeNat where diff = eqDiff
+instance Diff SomeSymbol where diff = eqDiff
+instance Diff SrcLoc where diff = eqDiff
+#if MIN_VERSION_base(4,17,0)
+instance Diff StackEntry where diff = eqDiff
+#endif
+instance Diff (STArray s i a) where diff = eqDiff
+instance Diff ThreadStatus where diff = eqDiff
+instance Diff TimeoutKey where diff = eqDiff
+#if MIN_VERSION_base(4,14,0)
+instance Diff Timeout where diff = eqDiff
+#endif
+instance Diff TrName where diff = eqDiff
 
 {- FOURMOLU_ENABLE -}
 
