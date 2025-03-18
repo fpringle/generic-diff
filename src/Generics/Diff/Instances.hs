@@ -30,6 +30,10 @@ import Data.Ratio
 import Data.SOP
 import Data.STRef
 import qualified Data.Semigroup as S
+import qualified Data.Text as T
+import Data.Text.Encoding.Error (UnicodeException)
+import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy.Builder as TLB
 import Data.Typeable
 import Data.Unique
 import Data.Version
@@ -133,6 +137,11 @@ instance Diff E3
 instance Diff E6
 instance Diff E9
 instance Diff E12
+
+instance Diff T.Text where diff = eqDiff
+instance Diff TL.Text where diff = eqDiff
+instance Diff TLB.Builder where diff = eqDiff
+instance Diff UnicodeException where diff = eqDiff
 
 {- FOURMOLU_ENABLE -}
 
