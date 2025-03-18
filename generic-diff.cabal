@@ -97,3 +97,4 @@ test-suite generic-diff-test
     , generic-diff
     , QuickCheck
     , hspec
+    , basic-sop

@@ -16,6 +16,7 @@ import Data.Version
 import Foreign.C.Types
 import Generics.Diff
 import Generics.Diff.Instances ()
+import Generics.Diff.UnitTestsSpec
 import qualified Test.Hspec as H
 import qualified Test.Hspec.QuickCheck as H
 import qualified Test.QuickCheck as Q
@@ -93,3 +94,6 @@ manyTypes allowUnit prop = do
     H.prop "((), Char)" $ prop $ Proxy @((), Char)
     H.prop "(Int, Rational, Version)" $ prop $ Proxy @(Int, Rational, Version)
     H.prop "(CLong, CChar, Uni, Deci)" $ prop $ Proxy @(CLong, CChar, Uni, Deci)
+
+  H.describe "Custom types" $ do
+    H.prop "CustomType" $ prop $ Proxy @CustomType

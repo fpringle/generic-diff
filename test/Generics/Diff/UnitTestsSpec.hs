@@ -9,8 +9,10 @@ import qualified GHC.Generics as G
 import Generics.Diff
 import Generics.Diff.Instances ()
 import Generics.SOP
+import Generics.SOP.Arbitrary (garbitrary)
 import qualified Test.Hspec as H
 import qualified Test.Hspec.QuickCheck as H
+import Test.QuickCheck as Q
 import Util
 
 spec :: H.Spec
@@ -42,6 +44,10 @@ instance Generic CustomType
 instance HasDatatypeInfo CustomType
 
 instance Diff CustomType
+
+instance Q.Arbitrary CustomType where
+  arbitrary = garbitrary
+  shrink = Q.genericShrink
 
 -- bunch of 'ConstructorInfo's, for convenience
 
