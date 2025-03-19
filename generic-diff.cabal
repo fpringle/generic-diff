@@ -37,7 +37,7 @@ common warnings
 
 common deps
   build-depends:
-    , base >= 4 && < 5
+    , base >= 4.12 && < 5
     , sop-core >= 0.4.0.1 && < 0.6
     , generics-sop >= 0.4 && < 0.6
     , text >= 1.1 && < 2.2
