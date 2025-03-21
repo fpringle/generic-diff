@@ -24,9 +24,18 @@ module Generics.Diff.Render
   , renderDiffErrorNestedWith
   , renderListDiffError
   , renderListDiffErrorWith
+
+    -- * Intermediate representation
+  , Doc (..)
+  , diffErrorDoc
+  , renderDoc
+  , showR
+  , linesDoc
+  , makeDoc
   )
 where
 
+import Data.List.NonEmpty (NonEmpty (..))
 import Data.SOP.NS
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Builder as TB
@@ -70,7 +79,7 @@ renderDiffResult = renderDiffResultWith defaultRenderOpts
 
 -- | Render a 'DiffResult' using a lazy 'TB.Builder', using custom 'RenderOpts'.
 renderDiffResultWith :: RenderOpts -> DiffResult a -> TB.Builder
-renderDiffResultWith opts = renderRDiffResultWith opts . diffResultR
+renderDiffResultWith opts = renderDoc opts 0 . diffResultDoc
 
 -- | Render a 'DiffError' using a lazy 'TB.Builder'.
 renderDiffError :: DiffError a -> TB.Builder
@@ -78,7 +87,7 @@ renderDiffError = renderDiffErrorWith defaultRenderOpts
 
 -- | Render a 'DiffError' using a lazy 'TB.Builder', using custom 'RenderOpts'.
 renderDiffErrorWith :: RenderOpts -> DiffError a -> TB.Builder
-renderDiffErrorWith opts = renderRDiffErrorWith opts 0 . diffErrorR
+renderDiffErrorWith opts = renderDoc opts 0 . diffErrorDoc
 
 -- | Render a 'DiffErrorNested' using a lazy 'TB.Builder'.
 renderDiffErrorNested :: DiffErrorNested xss -> TB.Builder
@@ -86,7 +95,7 @@ renderDiffErrorNested = renderDiffErrorNestedWith defaultRenderOpts
 
 -- | Render a 'DiffErrorNested' using a lazy 'TB.Builder', using custom 'RenderOpts'.
 renderDiffErrorNestedWith :: RenderOpts -> DiffErrorNested xss -> TB.Builder
-renderDiffErrorNestedWith opts = renderRDiffErrorNested opts 0 . diffErrorNestedR
+renderDiffErrorNestedWith opts = renderDoc opts 0 . diffErrorNestedDoc
 
 -- | Render a 'ListDiffError' using a lazy 'TB.Builder'.
 renderListDiffError :: ListDiffError xss -> TB.Builder
@@ -94,20 +103,100 @@ renderListDiffError = renderListDiffErrorWith defaultRenderOpts
 
 -- | Render a 'ListDiffError' using a lazy 'TB.Builder', using custom 'RenderOpts'.
 renderListDiffErrorWith :: RenderOpts -> ListDiffError xss -> TB.Builder
-renderListDiffErrorWith opts = renderRListDiffError opts "list" 0 . listDiffErrorR
+renderListDiffErrorWith opts = renderDoc opts 0 . listDiffErrorDoc "list"
 
 ------------------------------------------------------------
--- Intermediate representation
+-- Doc representation
 -- Rendering a 'DiffResult' happens in two steps: converting our strict SOP types into a much simpler
 -- intermediate representation, and then laying them out in a nice way.
+
+{- | An intermediate representation for diff output.
+
+We constrain output to follow a very simple pattern:
+
+- 'docLines' is a non-empty series of preliminary lines describing the error.
+- 'docSubDoc' is an optional 'Doc' representing a nested error, e.g. in 'FieldMismatch'.
+-}
+data Doc = Doc
+  { docLines :: NonEmpty TB.Builder
+  , docSubDoc :: Maybe Doc
+  }
+  deriving (Show)
+
+-- | Create a 'Doc' with a non-empty list of lines and a nested error.
+makeDoc :: NonEmpty TB.Builder -> DiffError a -> Doc
+makeDoc ls err = Doc ls (Just $ diffErrorDoc err)
+
+-- | Create a simple 'Doc' without a nested error.
+linesDoc :: NonEmpty TB.Builder -> Doc
+linesDoc ls = Doc ls Nothing
+
+diffResultDoc :: DiffResult a -> Doc
+diffResultDoc = \case
+  Equal -> linesDoc (pure "Equal")
+  Error err -> diffErrorDoc err
+
+-- | Convert a 'DiffError' to a 'Doc'.
+diffErrorDoc :: DiffError a -> Doc
+diffErrorDoc = \case
+  TopLevelNotEqual -> linesDoc (pure "Not equal")
+  Nested err -> diffErrorNestedDoc err
+  DiffList listErr -> listDiffErrorDoc "list" listErr
+  DiffNonEmpty listErr -> listDiffErrorDoc "non-empty list" listErr
+
+listDiffErrorDoc :: TB.Builder -> ListDiffError a -> Doc
+listDiffErrorDoc lst = \case
+  DiffAtIndex idx err ->
+    let lns = pure $ "Diff at " <> lst <> " index " <> showR idx <> " (0-indexed)"
+    in  makeDoc lns err
+  WrongLengths l r ->
+    linesDoc $
+      "Lists are wrong lengths"
+        :| [ "Length of left list: " <> showR l
+           , "Length of right list: " <> showR r
+           ]
+
+diffErrorNestedDoc :: DiffErrorNested xss -> Doc
+diffErrorNestedDoc = \case
+  WrongConstructor l r ->
+    let cName = collapse_NS . liftANS (K . constructorNameR)
+        lCons = cName l
+        rCons = cName r
+    in  linesDoc $
+          "Wrong constructor"
+            :| [ "Constructor of left value: " <> lCons
+               , "Constructor of right value: " <> rCons
+               ]
+  FieldMismatch (DiffAtField ns) ->
+    let (cName, fieldLoc, err) =
+          collapse_NS $
+            liftANS (\(cInfo :*: nsErr) -> K (unpackAtLocErr cInfo nsErr)) ns
+        lns =
+          ("Both values use constructor " <> cName <> " but fields don't match")
+            :| [renderRField fieldLoc <> ":"]
+    in  Doc lns (Just err)
+
+{- | Render a 'Doc' as a text 'TB.Builder'. This should be the only way we escape a 'Doc'.
+
+The output can be configured using 'RenderOpts'.
+-}
+renderDoc :: RenderOpts -> Int -> Doc -> TB.Builder
+renderDoc opts ind = unlinesB . go ind
+  where
+    go n Doc {..} =
+      let otherIndent = mkIndent opts False n
+          firstIndent = mkIndent opts True n
+          l :| ls = docLines
+          firstLine = firstIndent <> l
+          otherLines = [otherIndent <> line | line <- ls]
+          allLines = firstLine : otherLines
+      in  case docSubDoc of
+            Nothing -> allLines
+            Just err -> allLines <> go (n + 1) err
 
 type RConstructorName = TB.Builder
 
 type RFieldName = TB.Builder
-
-data RDiffResult
-  = RError RDiffError
-  | REqual
 
 data InfixSide = ILeft | IRight
 
@@ -116,52 +205,15 @@ data RField
   | InfixField InfixSide
   | RecordField RFieldName
 
-data RDiffErrorNested
-  = RWrongConstructor RConstructorName RConstructorName
-  | RFieldMismatch RConstructorName RField RDiffError
-
-data RDiffError where
-  RTopLevelNotEqual :: RDiffError
-  RNested :: RDiffErrorNested -> RDiffError
-  RDiffList :: RListDiffError -> RDiffError
-  RDiffNonEmpty :: RListDiffError -> RDiffError
-
-data RListDiffError
-  = RDiffAtIndex Int RDiffError
-  | RWrongLengths Int Int
-
-diffResultR :: DiffResult a -> RDiffResult
-diffResultR = \case
-  Equal -> REqual
-  Error err -> RError $ diffErrorR err
-
-diffErrorR :: DiffError a -> RDiffError
-diffErrorR = \case
-  TopLevelNotEqual -> RTopLevelNotEqual
-  Nested nested -> RNested $ diffErrorNestedR nested
-  DiffList list -> RDiffList $ listDiffErrorR list
-  DiffNonEmpty list -> RDiffNonEmpty $ listDiffErrorR list
-
-diffErrorNestedR :: DiffErrorNested a -> RDiffErrorNested
-diffErrorNestedR = \case
-  WrongConstructor l r ->
-    let cName = collapse_NS . liftANS (K . constructorNameR)
-    in  RWrongConstructor (cName l) (cName r)
-  FieldMismatch (DiffAtField ns) ->
-    let (cName, fieldLoc, err) =
-          collapse_NS $
-            liftANS (\(cInfo :*: nsErr) -> K (unpackAtLocErr cInfo nsErr)) ns
-    in  RFieldMismatch cName fieldLoc err
-
 constructorNameR :: ConstructorInfo xs -> RConstructorName
 constructorNameR = \case
   Constructor name -> TB.fromString name
   Infix name _ _ -> "(" <> TB.fromString name <> ")"
   Record name _ -> TB.fromString name
 
-unpackAtLocErr :: forall xs. ConstructorInfo xs -> NS DiffError xs -> (RConstructorName, RField, RDiffError)
+unpackAtLocErr :: forall xs. ConstructorInfo xs -> NS DiffError xs -> (RConstructorName, RField, Doc)
 unpackAtLocErr cInfo nsErr =
-  let err = collapse_NS $ liftANS (K . diffErrorR) nsErr
+  let err = collapse_NS $ liftANS (K . diffErrorDoc) nsErr
   in  case cInfo of
         Constructor name -> (TB.fromString name, IdxField $ index_NS nsErr, err)
         Infix name _ _ ->
@@ -172,51 +224,6 @@ unpackAtLocErr cInfo nsErr =
         Record name fields ->
           let fName = collapse_NS $ liftANS (K . TB.fromString . fieldName) $ pickOut fields nsErr
           in  (TB.fromString name, RecordField fName, err)
-
-listDiffErrorR :: ListDiffError a -> RListDiffError
-listDiffErrorR = \case
-  DiffAtIndex idx err -> RDiffAtIndex idx $ diffErrorR err
-  WrongLengths l r -> RWrongLengths l r
-
-renderRDiffResultWith :: RenderOpts -> RDiffResult -> TB.Builder
-renderRDiffResultWith opts = \case
-  REqual -> "Equal"
-  RError err -> renderRDiffErrorWith opts 0 err
-
-renderRDiffErrorWith :: RenderOpts -> Int -> RDiffError -> TB.Builder
-renderRDiffErrorWith opts ind = \case
-  RTopLevelNotEqual -> firstIndent <> "Not equal"
-  RNested den -> renderRDiffErrorNested opts ind den
-  RDiffList listErr -> renderRListDiffError opts "list" ind listErr
-  RDiffNonEmpty listErr -> renderRListDiffError opts "non-empty list" ind listErr
-  where
-    firstIndent = mkIndent opts True ind
-
-renderRListDiffError :: RenderOpts -> TB.Builder -> Int -> RListDiffError -> TB.Builder
-renderRListDiffError opts lst ind = \case
-  RDiffAtIndex idx err ->
-    (firstIndent <> "Diff at " <> lst <> " index " <> showR idx <> " (0-indexed)\n")
-      <> renderRDiffErrorWith opts (ind + 1) err
-  RWrongLengths l r ->
-    (firstIndent <> "Lists are wrong lengths\n")
-      <> (otherIndent <> "Length of left list: " <> showR l <> "\n")
-      <> (otherIndent <> "Length of right list: " <> showR r)
-  where
-    otherIndent = mkIndent opts False ind
-    firstIndent = mkIndent opts True ind
-
-renderRDiffErrorNested :: RenderOpts -> Int -> RDiffErrorNested -> TB.Builder
-renderRDiffErrorNested opts ind = \case
-  RWrongConstructor lCons rCons ->
-    (firstIndent <> "Wrong constructor\n")
-      <> (otherIndent <> "Constructor of left value: " <> lCons <> "\n")
-      <> (otherIndent <> "Constructor of right value: " <> rCons)
-  RFieldMismatch cName fieldLoc err ->
-    (firstIndent <> "Both values use constructor " <> cName <> " but fields don't match\n")
-      <> (otherIndent <> renderRField fieldLoc <> ":\n" <> renderRDiffErrorWith opts (ind + 1) err)
-  where
-    firstIndent = mkIndent opts True ind
-    otherIndent = mkIndent opts False ind
 
 renderRField :: RField -> TB.Builder
 renderRField = \case
@@ -229,6 +236,11 @@ renderRField = \case
 ------------------------------------------------------------
 -- Util
 
+unlinesB :: [TB.Builder] -> TB.Builder
+unlinesB (b : bs) = b <> TB.singleton '\n' <> unlinesB bs
+unlinesB [] = mempty
+
+-- | 'show' a value as a 'TB.Builder'.
 showR :: (Show a) => a -> TB.Builder
 showR = TB.fromString . show
 {-# INLINE showR #-}
