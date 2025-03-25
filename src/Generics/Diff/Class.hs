@@ -10,6 +10,7 @@ module Generics.Diff.Class
   , gdiffTopLevel
   , gdiffWith
   , eqDiff
+  , diffWithSpecial
   , diffListWith
   )
 where
@@ -124,7 +125,11 @@ class Diff a where
   -- | Compare two lists of values. This mostly exists so that we can define a custom instance for 'String',
   -- in a similar vein to 'showList'.
   diffList :: [a] -> [a] -> DiffResult [a]
-  diffList = diffListWith DiffList diff
+  diffList = diffWithSpecial
+
+-- | When we have an instance of 'SpecialDiff', we can implement 'diff' using 'DiffSpecial'.
+diffWithSpecial :: (SpecialDiff a) => a -> a -> DiffResult a
+diffWithSpecial l r = maybe Equal (Error . DiffSpecial) $ specialDiff l r
 
 {- | Used to implement 'diffList'. Given two lists, a way to 'diff' the elements of the list, and a way
 to convert a 'ListDiffError' to a 'DiffError' (e.g. 'DiffList'), return a 'DiffResult' of a list-like type.

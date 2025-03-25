@@ -23,10 +23,25 @@ data DiffError a where
   TopLevelNotEqual :: DiffError a
   -- | We've identified a diff at a certain constructor or field
   Nested :: DiffErrorNested (Code a) -> DiffError a
-  -- | Special case for lists
-  DiffList :: ListDiffError a -> DiffError [a]
-  -- | Special case for non-empty lists
-  DiffNonEmpty :: ListDiffError a -> DiffError (NonEmpty a)
+  -- | Special case for special cases
+  DiffSpecial :: (SpecialDiff a) => SpecialDiffError a -> DiffError a
+
+{- | Sometimes we want to diff types that don't quite fit the structor of a 'DiffErrorNested',
+such as lists (see 'ListDiffError'), or even user-defined types that internally preserve invariants
+or have unusual 'Eq' instances. In this case we can implement an instance of 'SpecialDiff' for the
+type.
+-}
+class (Show (SpecialDiffError a), Eq (SpecialDiffError a)) => SpecialDiff a where
+  -- | A custom diff error type for the special case.
+  type SpecialDiffError a
+
+  -- | Compare two values. The result will be converted to a 'DiffResult': 'Nothing' will result
+  -- in 'Equal', whereas a 'Just' result will be converted to a 'DiffError' using 'DiffSpecial'.
+  specialDiff :: a -> a -> Maybe (SpecialDiffError a)
+
+  -- | As well as specifying how two diff two values, we also have to specify how to render
+  -- the output. See the helper functions in "Generics.Diff.Render".
+  renderSpecialDiffError :: SpecialDiffError a -> Doc
 
 {- | An intermediate representation for diff output.
 

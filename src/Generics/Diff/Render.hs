@@ -102,12 +102,11 @@ diffResultDoc = \case
   Error err -> diffErrorDoc err
 
 -- | Convert a 'DiffError' to a 'Doc'.
-diffErrorDoc :: DiffError a -> Doc
+diffErrorDoc :: forall a. DiffError a -> Doc
 diffErrorDoc = \case
   TopLevelNotEqual -> linesDoc (pure "Not equal")
   Nested err -> diffErrorNestedDoc err
-  DiffList listErr -> listDiffErrorDoc "list" listErr
-  DiffNonEmpty listErr -> listDiffErrorDoc "non-empty list" listErr
+  DiffSpecial err -> renderSpecialDiffError @a err
 
 {- | Convert a 'ListDiffError' to a 'Doc'.
 
