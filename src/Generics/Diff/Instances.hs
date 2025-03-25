@@ -249,7 +249,7 @@ instance (Diff a) => Diff [a] where
   diff = diffList
 
 instance (Diff a) => Diff (NE.NonEmpty a) where
-  diff l r = diffListWith DiffNonEmpty diff (NE.toList l) (NE.toList r)
+  diff = diffWithSpecial
 
 -- combinators - typically we'll use gdiff
 

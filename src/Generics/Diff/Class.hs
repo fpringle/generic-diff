@@ -1,5 +1,5 @@
 {-# LANGUAGE EmptyCase #-}
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints -Wno-orphans #-}
 
 module Generics.Diff.Class
   ( -- * Class
@@ -11,12 +11,17 @@ module Generics.Diff.Class
   , gdiffWith
   , eqDiff
   , diffWithSpecial
+
+    -- * Special case: lists
   , diffListWith
   )
 where
 
+import Data.Function (on)
+import qualified Data.List.NonEmpty as NE
 import Data.SOP
 import Data.SOP.NP
+import Generics.Diff.Render
 import Generics.Diff.Type
 import Generics.SOP
 
@@ -131,18 +136,29 @@ class Diff a where
 diffWithSpecial :: (SpecialDiff a) => a -> a -> DiffResult a
 diffWithSpecial l r = maybe Equal (Error . DiffSpecial) $ specialDiff l r
 
-{- | Used to implement 'diffList'. Given two lists, a way to 'diff' the elements of the list, and a way
-to convert a 'ListDiffError' to a 'DiffError' (e.g. 'DiffList'), return a 'DiffResult' of a list-like type.
+instance (Diff a) => SpecialDiff [a] where
+  type SpecialDiffError [a] = ListDiffError a
+  specialDiff = diffListWith diff
+  renderSpecialDiffError = listDiffErrorDoc "list"
+
+instance (Diff a) => SpecialDiff (NE.NonEmpty a) where
+  type SpecialDiffError (NE.NonEmpty a) = ListDiffError a
+  specialDiff = diffListWith diff `on` NE.toList
+  renderSpecialDiffError = listDiffErrorDoc "non-empty list"
+
+{- | Given two lists and a way to 'diff' the elements of the list,
+return a 'ListDiffError'. Used to implement 'specialDiff' for list-like types.
+See "Generics.Diff.Special" for an example.
 -}
-diffListWith :: (ListDiffError a -> DiffError b) -> (a -> a -> DiffResult a) -> [a] -> [a] -> DiffResult b
-diffListWith f d = go 0
+diffListWith :: (a -> a -> DiffResult a) -> [a] -> [a] -> Maybe (ListDiffError a)
+diffListWith d = go 0
   where
-    go _ [] [] = Equal
-    go n [] ys = Error $ f $ WrongLengths n (n + length ys)
-    go n xs [] = Error $ f $ WrongLengths (n + length xs) n
+    go _ [] [] = Nothing
+    go n [] ys = Just $ WrongLengths n (n + length ys)
+    go n xs [] = Just $ WrongLengths (n + length xs) n
     go n (x : xs) (y : ys) = case d x y of
       Equal -> go (n + 1) xs ys
-      Error err -> Error $ f $ DiffAtIndex n err
+      Error err -> Just $ DiffAtIndex n err
 
 {- | The most basic 'Differ' possible. If the two values are equal, return 'Equal';
 otherwise, return 'TopLevelNotEqual'.
