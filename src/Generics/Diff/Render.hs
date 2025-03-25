@@ -42,19 +42,6 @@ import qualified Data.Text.Lazy.Builder as TB
 import qualified Data.Text.Lazy.IO as TL
 import Generics.Diff.Type
 import Generics.SOP as SOP
-import Numeric.Natural
-
-{- | Configuration type used to tweak the output of 'renderDiffResultWith'.
-
-Use 'defaultRenderOpts' and the field accessors below to construct.
--}
-data RenderOpts = RenderOpts
-  { indentSize :: Natural
-  -- ^ How many spaces to indent each new "level" of comparison.
-  , numberedLevels :: Bool
-  -- ^ Whether or not to include level numbers in the output.
-  }
-  deriving (Show)
 
 -- | Sensible rendering defaults. No numbers, 2-space indentation.
 defaultRenderOpts :: RenderOpts
@@ -109,19 +96,6 @@ renderListDiffErrorWith opts = renderDoc opts 0 . listDiffErrorDoc "list"
 -- Doc representation
 -- Rendering a 'DiffResult' happens in two steps: converting our strict SOP types into a much simpler
 -- intermediate representation, and then laying them out in a nice way.
-
-{- | An intermediate representation for diff output.
-
-We constrain output to follow a very simple pattern:
-
-- 'docLines' is a non-empty series of preliminary lines describing the error.
-- 'docSubDoc' is an optional 'Doc' representing a nested error, e.g. in 'FieldMismatch'.
--}
-data Doc = Doc
-  { docLines :: NonEmpty TB.Builder
-  , docSubDoc :: Maybe Doc
-  }
-  deriving (Show)
 
 -- | Create a 'Doc' with a non-empty list of lines and a nested error.
 makeDoc :: NonEmpty TB.Builder -> DiffError a -> Doc

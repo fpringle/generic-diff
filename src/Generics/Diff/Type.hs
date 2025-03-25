@@ -2,9 +2,11 @@
 
 module Generics.Diff.Type where
 
-import Data.List.NonEmpty
+import Data.List.NonEmpty (NonEmpty (..))
 import Data.SOP.NP
+import qualified Data.Text.Lazy.Builder as TB
 import Generics.SOP as SOP
+import Numeric.Natural
 
 {- | A newtype wrapping a binary function producing a 'DiffResult'.
 The only reason for this newtype is so that we can use it as a functor with the types from
@@ -25,6 +27,19 @@ data DiffError a where
   DiffList :: ListDiffError a -> DiffError [a]
   -- | Special case for non-empty lists
   DiffNonEmpty :: ListDiffError a -> DiffError (NonEmpty a)
+
+{- | An intermediate representation for diff output.
+
+We constrain output to follow a very simple pattern:
+
+- 'docLines' is a non-empty series of preliminary lines describing the error.
+- 'docSubDoc' is an optional 'Doc' representing a nested error, e.g. in 'FieldMismatch'.
+-}
+data Doc = Doc
+  { docLines :: NonEmpty TB.Builder
+  , docSubDoc :: Maybe Doc
+  }
+  deriving (Show)
 
 {- | If we did a normal 'Generics.Diff.gdiff' on a linked list, we'd have to recurse through one "level" of
 'Generics.Diff.Diff's for each element of the input lists. The output would be really hard to read or understand.
@@ -72,6 +87,18 @@ report two things: what the 'DiffError' is at that field, and exactly where that
 of 'NS' gives us both of those things.
 -}
 newtype DiffAtField xss = DiffAtField (NS (ConstructorInfo :*: NS DiffError) xss)
+
+{- | Configuration type used to tweak the output of 'Generics.Diff.Render.renderDiffResultWith'.
+
+Use 'Generics.Diff.Render.defaultRenderOpts' and the field accessors below to construct.
+-}
+data RenderOpts = RenderOpts
+  { indentSize :: Natural
+  -- ^ How many spaces to indent each new "level" of comparison.
+  , numberedLevels :: Bool
+  -- ^ Whether or not to include level numbers in the output.
+  }
+  deriving (Show)
 
 ------------------------------------------------------------
 -- Instance madness
