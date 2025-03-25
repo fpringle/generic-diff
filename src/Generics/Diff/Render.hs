@@ -29,6 +29,7 @@ module Generics.Diff.Render
   , Doc (..)
   , diffErrorDoc
   , renderDoc
+  , listDiffErrorDoc
   , showR
   , linesDoc
   , makeDoc
@@ -118,6 +119,22 @@ diffErrorDoc = \case
   DiffList listErr -> listDiffErrorDoc "list" listErr
   DiffNonEmpty listErr -> listDiffErrorDoc "non-empty list" listErr
 
+{- | Convert a 'ListDiffError' to a 'Doc'.
+
+The first argument gives us a name for the type of list, for clearer output.
+For example:
+
+@
+ghci> 'TL.putStrLn' . 'TB.toLazyText' . 'renderDoc' 'defaultRenderOpts' 0 . 'listDiffErrorDoc' "list" $ 'DiffAtIndex' 3 'TopLevelNotEqual'
+Diff at list index 3 (0-indexed)
+  Not equal
+
+ghci> TL.putStrLn . TB.toLazyText . renderDoc defaultRenderOpts 0 . listDiffErrorDoc "non-empty list" $ WrongLengths 3 5
+non-empty lists are wrong lengths
+Length of left list: 3
+Length of right list: 5
+@
+-}
 listDiffErrorDoc :: TB.Builder -> ListDiffError a -> Doc
 listDiffErrorDoc lst = \case
   DiffAtIndex idx err ->
@@ -125,7 +142,7 @@ listDiffErrorDoc lst = \case
     in  makeDoc lns err
   WrongLengths l r ->
     linesDoc $
-      "Lists are wrong lengths"
+      (lst <> "s are wrong lengths")
         :| [ "Length of left list: " <> showR l
            , "Length of right list: " <> showR r
            ]
