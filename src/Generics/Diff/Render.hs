@@ -22,8 +22,6 @@ module Generics.Diff.Render
   , renderDiffErrorWith
   , renderDiffErrorNested
   , renderDiffErrorNestedWith
-  , renderListDiffError
-  , renderListDiffErrorWith
 
     -- * Intermediate representation
   , Doc (..)
@@ -84,14 +82,6 @@ renderDiffErrorNested = renderDiffErrorNestedWith defaultRenderOpts
 -- | Render a 'DiffErrorNested' using a lazy 'TB.Builder', using custom 'RenderOpts'.
 renderDiffErrorNestedWith :: RenderOpts -> DiffErrorNested xss -> TB.Builder
 renderDiffErrorNestedWith opts = renderDoc opts 0 . diffErrorNestedDoc
-
--- | Render a 'ListDiffError' using a lazy 'TB.Builder'.
-renderListDiffError :: ListDiffError xss -> TB.Builder
-renderListDiffError = renderListDiffErrorWith defaultRenderOpts
-
--- | Render a 'ListDiffError' using a lazy 'TB.Builder', using custom 'RenderOpts'.
-renderListDiffErrorWith :: RenderOpts -> ListDiffError xss -> TB.Builder
-renderListDiffErrorWith opts = renderDoc opts 0 . listDiffErrorDoc "list"
 
 ------------------------------------------------------------
 -- Doc representation
