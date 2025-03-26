@@ -11,6 +11,7 @@ module Generics.Diff.Class
   , gdiffWith
   , eqDiff
   , diffWithSpecial
+  , specialDiffVia
 
     -- * Special case: lists
   , diffListWith
@@ -21,7 +22,7 @@ import Data.SOP
 import Data.SOP.NP
 import Generics.Diff.Render
 import Generics.Diff.Type
-import Generics.SOP
+import Generics.SOP as SOP
 
 {- | A type with an instance of 'Diff' permits a more nuanced comparison than 'Eq' or 'Ord'.
 If two values are not equal, 'diff' will tell you exactly where they differ ("in this contructor,
@@ -205,6 +206,52 @@ gdiffWithPure ::
   a ->
   DiffResult a
 gdiffWithPure ds = gdiffWith $ cpure_POP (Proxy @c) ds
+
+{- | Helper function to implement 'specialDiff' for a type with @SpecialDiffError a = DiffErrorNested xss@.
+
+For example, say we want to implement 'SpecialDiff' (and then 'Diff') for @Tree@ from @containers@.
+We'd ideally like to use a 'SOP.Generic' instance, but we don't have one. Nevertheless we can fake one,
+by providing a function to convert from @Tree@ to what __would__ be its 'SOP.Rep', and a set of 'ConstructorInfo's
+which __would__ have been derived.
+
+@
+data Tree a = Node
+  { rootLabel :: a
+  , subForest :: [Tree a]
+  }
+
+type TreeCode a = '[ '[a, [Tree a]]]
+
+fromTree :: Tree a -> 'NS' ('NP' 'I') (TreeCode a)
+fromTree (Node lbl frst) = 'Z' $ 'I' lbl ':*' 'I' frst ':*' 'Nil'
+
+treeCons :: 'NP' 'ConstructorInfo' (TreeCode a)
+treeCons = 'Record' "Node" ('FieldInfo' "rootLabel" ':*' 'FieldInfo' "subForest" ':*' 'Nil') ':*' 'Nil'
+
+instance ('Diff' a) => 'SpecialDiff' (Tree a) where
+  type 'SpecialDiffError' (Tree a) = 'DiffErrorNested' '[ '[a, [Tree a]]]
+  'specialDiff' = 'specialDiffVia' fromTree treeCons
+
+  'renderSpecialDiffError' = 'diffErrorNestedDoc'
+
+instance ('Diff' a) => 'Diff' (Tree a) where
+  diff = 'diffWithSpecial'
+@
+-}
+specialDiffVia ::
+  forall a code.
+  (All2 Diff code) =>
+  -- | Convert a type to an SOP representation
+  (a -> NS (NP I) code) ->
+  -- | Manual list of constructor info
+  NP ConstructorInfo code ->
+  a ->
+  a ->
+  Maybe (DiffErrorNested code)
+specialDiffVia toCode constructors l r = gdiff' constructors differs (toCode l) (toCode r)
+  where
+    differs :: NP (NP Differ) code
+    differs = unPOP $ hcpure (Proxy @Diff) (Differ diff)
 
 ------------------------------------------------------------
 -- Auxiliary functions

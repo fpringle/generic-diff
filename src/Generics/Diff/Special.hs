@@ -74,6 +74,7 @@ instance ('Generics.Diff.Diff' a) => 'SpecialDiff' ('NE.NonEmpty' a) where
 module Generics.Diff.Special
   ( SpecialDiff (..)
   , diffWithSpecial
+  , specialDiffVia
 
     -- * Lists
   , module List
