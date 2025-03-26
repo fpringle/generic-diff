@@ -28,6 +28,7 @@ module Generics.Diff.Render
   , diffErrorDoc
   , renderDoc
   , listDiffErrorDoc
+  , diffErrorNestedDoc
   , showR
   , linesDoc
   , makeDoc
@@ -136,6 +137,11 @@ listDiffErrorDoc lst = \case
            , "Length of right list: " <> showR r
            ]
 
+{- | Convert a 'DiffErrorNested' to a 'Doc'.
+
+This is exported in the case that we want to implement an instance of 'Generics.Diff.Diff' for an existing type (e.g.
+from a 3rd-party library) that does not have a 'SOP.Generic' instance.
+-}
 diffErrorNestedDoc :: DiffErrorNested xss -> Doc
 diffErrorNestedDoc = \case
   WrongConstructor l r ->
