@@ -17,8 +17,6 @@ module Generics.Diff.Class
   )
 where
 
-import Data.Function (on)
-import qualified Data.List.NonEmpty as NE
 import Data.SOP
 import Data.SOP.NP
 import Generics.Diff.Render
@@ -140,11 +138,6 @@ instance (Diff a) => SpecialDiff [a] where
   type SpecialDiffError [a] = ListDiffError a
   specialDiff = diffListWith diff
   renderSpecialDiffError = listDiffErrorDoc "list"
-
-instance (Diff a) => SpecialDiff (NE.NonEmpty a) where
-  type SpecialDiffError (NE.NonEmpty a) = ListDiffError a
-  specialDiff = diffListWith diff `on` NE.toList
-  renderSpecialDiffError = listDiffErrorDoc "non-empty list"
 
 {- | Given two lists and a way to 'diff' the elements of the list,
 return a 'ListDiffError'. Used to implement 'specialDiff' for list-like types.
