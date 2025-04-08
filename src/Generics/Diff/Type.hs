@@ -19,7 +19,8 @@ newtype Differ x = Differ (x -> x -> DiffResult x)
 
 {- | A GADT representing an error during the diff algorithm - i.e. this tells us where and how two values differ.
 
-The special constructors for list are so that we can treat these types a bit uniquely. See 'ListDiffError'.
+The 'DiffSpecial' constructors for instances of 'SpecialDiff' are so that we can treat these types uniquely.
+See 'SpecialDiff'.
 -}
 data DiffError a where
   -- | All we can say is that the values being compared are not equal.

@@ -34,6 +34,10 @@ we can "descend" through) depends on the implementation of the instance.
 For user-defined types, it's strongly recommended you derive your 'Diff' instance using 'Generic' from
 @generics-sop@. If those types refer to other types, those will need 'Diff' instances too. For example:
 
+However, in some cases we'll want to use a custom type for representing diffs of user-defined or
+third-party types. For example, if we have non-derived `Eq` instances, invariants etc. In that case,
+see "Generics.Diff.Special".
+
 @
 {\-# LANGUAGE DerivingStrategies #-\}
 {\-# LANGUAGE DeriveGeneric #-\}
