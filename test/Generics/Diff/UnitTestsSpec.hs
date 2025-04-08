@@ -100,7 +100,7 @@ testSets =
       { setName = "Diff, FieldMismatch, Infix constructor, right side, nested"
       , leftValue = ('a', 5, ()) `Con3` [Just 1]
       , rightValue = ('a', 5, ()) `Con3` [Nothing, Just 1]
-      , expectedDiffResult = Error (Nested $ FieldMismatch (DiffAtField (S (S (Z (c3Info :*: S (Z $ DiffList (DiffAtIndex 0 (Nested (WrongConstructor (S (Z justInfo)) (Z nothingInfo)))))))))))
+      , expectedDiffResult = Error (Nested $ FieldMismatch (DiffAtField (S (S (Z (c3Info :*: S (Z $ DiffSpecial (DiffAtIndex 0 (Nested (WrongConstructor (S (Z justInfo)) (Z nothingInfo)))))))))))
       }
   , TestSet
       { setName = "Diff, FieldMismatch, Infix constructor, left side, nested"
