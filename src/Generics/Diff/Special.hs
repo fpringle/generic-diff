@@ -47,7 +47,7 @@ instance ('Generics.Diff.Diff' a) => 'SpecialDiff' [a] where
   'DiffAtIndex' idx err ->
     let
       -- top line
-      lns = pure $ "Diff at " <> lst <> " index " <> 'Generics.Diff.Render.showR' idx <> " (0-indexed)"
+      lns = pure $ "Diff at " <> lst <> " index " <> 'Generics.Diff.Render.showB' idx <> " (0-indexed)"
     in
       -- 'Generics.Diff.Render.makeDoc' is a smart constructor for a 'Doc' with a sub error
       'Generics.Diff.Render.makeDoc' lns err
@@ -55,8 +55,8 @@ instance ('Generics.Diff.Diff' a) => 'SpecialDiff' [a] where
       -- 'Generics.Diff.Render.linesDoc' is a smart constructor for a 'Doc' without a sub error
     'Generics.Diff.Render.linesDoc' $
       (lst <> "s are wrong lengths")
-        :| [ "Length of left list: " <> 'Generics.Diff.Render.showR' l
-           , "Length of right list: " <> 'Generics.Diff.Render.showR' r
+        :| [ "Length of left list: " <> 'Generics.Diff.Render.showB' l
+           , "Length of right list: " <> 'Generics.Diff.Render.showB' r
            ]
 @
 

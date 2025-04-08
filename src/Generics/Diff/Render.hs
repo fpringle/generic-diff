@@ -29,7 +29,7 @@ module Generics.Diff.Render
   , renderDoc
   , listDiffErrorDoc
   , diffErrorNestedDoc
-  , showR
+  , showB
   , linesDoc
   , makeDoc
   )
@@ -128,13 +128,13 @@ Length of right list: 5
 listDiffErrorDoc :: TB.Builder -> ListDiffError a -> Doc
 listDiffErrorDoc lst = \case
   DiffAtIndex idx err ->
-    let lns = pure $ "Diff at " <> lst <> " index " <> showR idx <> " (0-indexed)"
+    let lns = pure $ "Diff at " <> lst <> " index " <> showB idx <> " (0-indexed)"
     in  makeDoc lns err
   WrongLengths l r ->
     linesDoc $
       (lst <> "s are wrong lengths")
-        :| [ "Length of left list: " <> showR l
-           , "Length of right list: " <> showR r
+        :| [ "Length of left list: " <> showB l
+           , "Length of right list: " <> showB r
            ]
 
 {- | Convert a 'DiffErrorNested' to a 'Doc'.
@@ -213,7 +213,7 @@ unpackAtLocErr cInfo nsErr =
 
 renderRField :: RField -> TB.Builder
 renderRField = \case
-  IdxField n -> "In field " <> showR n <> " (0-indexed)"
+  IdxField n -> "In field " <> showB n <> " (0-indexed)"
   InfixField side -> case side of
     ILeft -> "In the left-hand field"
     IRight -> "In the right-hand field"
@@ -227,9 +227,9 @@ unlinesB (b : bs) = b <> TB.singleton '\n' <> unlinesB bs
 unlinesB [] = mempty
 
 -- | 'show' a value as a 'TB.Builder'.
-showR :: (Show a) => a -> TB.Builder
-showR = TB.fromString . show
-{-# INLINE showR #-}
+showB :: (Show a) => a -> TB.Builder
+showB = TB.fromString . show
+{-# INLINE showB #-}
 
 liftANS :: forall f g xs. (forall a. f a -> g a) -> NS f xs -> NS g xs
 liftANS f = go
@@ -242,7 +242,7 @@ liftANS f = go
 mkIndent :: RenderOpts -> Bool -> Int -> TB.Builder
 mkIndent RenderOpts {..} isFirst ind =
   let spaces = TB.fromText (T.replicate (ind * fromIntegral indentSize) " ")
-      number = showR (ind + 1) <> ". "
+      number = showB (ind + 1) <> ". "
       noNumber = "   "
 
       withNumber = spaces <> number
