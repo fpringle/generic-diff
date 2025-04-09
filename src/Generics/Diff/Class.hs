@@ -1,5 +1,5 @@
 {-# LANGUAGE EmptyCase #-}
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints -Wno-orphans #-}
 
 module Generics.Diff.Class
   ( -- * Class
@@ -10,14 +10,21 @@ module Generics.Diff.Class
   , gdiffTopLevel
   , gdiffWith
   , eqDiff
+  , diffWithSpecial
+  , gspecialDiffNested
+
+    -- * Special case: lists
   , diffListWith
   )
 where
 
 import Data.SOP
 import Data.SOP.NP
+import qualified GHC.Generics as G
+import Generics.Diff.Render
 import Generics.Diff.Type
-import Generics.SOP
+import Generics.SOP as SOP
+import Generics.SOP.GGP as SOP
 
 {- | A type with an instance of 'Diff' permits a more nuanced comparison than 'Eq' or 'Ord'.
 If two values are not equal, 'diff' will tell you exactly where they differ ("in this contructor,
@@ -26,6 +33,10 @@ we can "descend" through) depends on the implementation of the instance.
 
 For user-defined types, it's strongly recommended you derive your 'Diff' instance using 'Generic' from
 @generics-sop@. If those types refer to other types, those will need 'Diff' instances too. For example:
+
+However, in some cases we'll want to use a custom type for representing diffs of user-defined or
+third-party types. For example, if we have non-derived `Eq` instances, invariants etc. In that case,
+see "Generics.Diff.Special".
 
 @
 {\-# LANGUAGE DerivingStrategies #-\}
@@ -124,20 +135,30 @@ class Diff a where
   -- | Compare two lists of values. This mostly exists so that we can define a custom instance for 'String',
   -- in a similar vein to 'showList'.
   diffList :: [a] -> [a] -> DiffResult [a]
-  diffList = diffListWith DiffList diff
+  diffList = diffWithSpecial
 
-{- | Used to implement 'diffList'. Given two lists, a way to 'diff' the elements of the list, and a way
-to convert a 'ListDiffError' to a 'DiffError' (e.g. 'DiffList'), return a 'DiffResult' of a list-like type.
+-- | When we have an instance of 'SpecialDiff', we can implement 'diff' using 'DiffSpecial'.
+diffWithSpecial :: (SpecialDiff a) => a -> a -> DiffResult a
+diffWithSpecial l r = maybe Equal (Error . DiffSpecial) $ specialDiff l r
+
+instance (Diff a) => SpecialDiff [a] where
+  type SpecialDiffError [a] = ListDiffError a
+  specialDiff = diffListWith diff
+  renderSpecialDiffError = listDiffErrorDoc "list"
+
+{- | Given two lists and a way to 'diff' the elements of the list,
+return a 'ListDiffError'. Used to implement 'specialDiff' for list-like types.
+See "Generics.Diff.Special" for an example.
 -}
-diffListWith :: (ListDiffError a -> DiffError b) -> (a -> a -> DiffResult a) -> [a] -> [a] -> DiffResult b
-diffListWith f d = go 0
+diffListWith :: (a -> a -> DiffResult a) -> [a] -> [a] -> Maybe (ListDiffError a)
+diffListWith d = go 0
   where
-    go _ [] [] = Equal
-    go n [] ys = Error $ f $ WrongLengths n (n + length ys)
-    go n xs [] = Error $ f $ WrongLengths (n + length xs) n
+    go _ [] [] = Nothing
+    go n [] ys = Just $ WrongLengths n (n + length ys)
+    go n xs [] = Just $ WrongLengths (n + length xs) n
     go n (x : xs) (y : ys) = case d x y of
       Equal -> go (n + 1) xs ys
-      Error err -> Error $ f $ DiffAtIndex n err
+      Error err -> Just $ DiffAtIndex n err
 
 {- | The most basic 'Differ' possible. If the two values are equal, return 'Equal';
 otherwise, return 'TopLevelNotEqual'.
@@ -191,6 +212,45 @@ gdiffWithPure ::
   a ->
   DiffResult a
 gdiffWithPure ds = gdiffWith $ cpure_POP (Proxy @c) ds
+
+{- | Helper function to implement 'specialDiff' for an instance of "GHC.Generic", with
+@SpecialDiffError a = DiffErrorNested xss@.
+
+For example, say we want to implement 'SpecialDiff' (and then 'Diff') for @Tree@ from @containers@.
+We'd ideally like to use a 'SOP.Generic' instance, but we don't have one. Nevertheless we can fake one,
+using 'G.Generic' from "GHC.Generics".
+
+@
+data Tree a = Node
+  { rootLabel :: a
+  , subForest :: [Tree a]
+  }
+  deriving ('G.Generic')
+
+instance ('Diff' a) => 'SpecialDiff' (Tree a) where
+  type 'SpecialDiffError' (Tree a) = 'DiffErrorNested' ('GCode' (Tree a))
+  'specialDiff' = 'gspecialDiffNested'
+
+  'renderSpecialDiffError' = 'diffErrorNestedDoc'
+
+instance ('Diff' a) => 'Diff' (Tree a) where
+  diff = 'diffWithSpecial'
+@
+-}
+gspecialDiffNested ::
+  forall a.
+  ( G.Generic a
+  , GFrom a
+  , GDatatypeInfo a
+  , All2 Diff (GCode a)
+  ) =>
+  a ->
+  a ->
+  Maybe (DiffErrorNested (GCode a))
+gspecialDiffNested l r = gdiff' constructors differs (unSOP $ gfrom l) (unSOP $ gfrom r)
+  where
+    differs = unPOP $ hcpure (Proxy @Diff) (Differ diff)
+    constructors = constructorInfo $ gdatatypeInfo $ Proxy @a
 
 ------------------------------------------------------------
 -- Auxiliary functions

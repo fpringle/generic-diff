@@ -41,6 +41,7 @@ import Data.Text.Encoding.Error (UnicodeException)
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Builder as TLB
 import Data.Type.Coercion
+import Generics.Diff.Special.List ()
 #if MIN_VERSION_base(4,16,0)
 import Data.Type.Ord
 #endif
@@ -249,7 +250,7 @@ instance (Diff a) => Diff [a] where
   diff = diffList
 
 instance (Diff a) => Diff (NE.NonEmpty a) where
-  diff l r = diffListWith DiffNonEmpty diff (NE.toList l) (NE.toList r)
+  diff = diffWithSpecial
 
 -- combinators - typically we'll use gdiff
 

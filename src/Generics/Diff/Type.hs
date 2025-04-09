@@ -2,9 +2,14 @@
 
 module Generics.Diff.Type where
 
-import Data.List.NonEmpty
+import Data.List.NonEmpty (NonEmpty (..))
 import Data.SOP.NP
+import qualified Data.Text.Lazy.Builder as TB
 import Generics.SOP as SOP
+import Numeric.Natural
+
+------------------------------------------------------------
+-- Types
 
 {- | A newtype wrapping a binary function producing a 'DiffResult'.
 The only reason for this newtype is so that we can use it as a functor with the types from
@@ -14,17 +19,16 @@ newtype Differ x = Differ (x -> x -> DiffResult x)
 
 {- | A GADT representing an error during the diff algorithm - i.e. this tells us where and how two values differ.
 
-The special constructors for list are so that we can treat these types a bit uniquely. See 'ListDiffError'.
+The 'DiffSpecial' constructors for instances of 'SpecialDiff' are so that we can treat these types uniquely.
+See 'SpecialDiff'.
 -}
 data DiffError a where
   -- | All we can say is that the values being compared are not equal.
   TopLevelNotEqual :: DiffError a
   -- | We've identified a diff at a certain constructor or field
   Nested :: DiffErrorNested (Code a) -> DiffError a
-  -- | Special case for lists
-  DiffList :: ListDiffError a -> DiffError [a]
-  -- | Special case for non-empty lists
-  DiffNonEmpty :: ListDiffError a -> DiffError (NonEmpty a)
+  -- | Special case for special cases
+  DiffSpecial :: (SpecialDiff a) => SpecialDiffError a -> DiffError a
 
 {- | If we did a normal 'Generics.Diff.gdiff' on a linked list, we'd have to recurse through one "level" of
 'Generics.Diff.Diff's for each element of the input lists. The output would be really hard to read or understand.
@@ -38,10 +42,6 @@ data ListDiffError a
     -- 'DiffAtIndex' , we know that one of the lists must be a subset of the other.
     WrongLengths Int Int
   deriving (Show, Eq)
-
-deriving instance (Show (DiffError a))
-
-deriving instance (Eq (DiffError a))
 
 infixr 6 :*:
 
@@ -74,7 +74,59 @@ of 'NS' gives us both of those things.
 newtype DiffAtField xss = DiffAtField (NS (ConstructorInfo :*: NS DiffError) xss)
 
 ------------------------------------------------------------
+-- Classes
+
+{- | Sometimes we want to diff types that don't quite fit the structor of a 'DiffErrorNested',
+such as lists (see 'ListDiffError'), or even user-defined types that internally preserve invariants
+or have unusual 'Eq' instances. In this case we can implement an instance of 'SpecialDiff' for the
+type.
+-}
+class (Show (SpecialDiffError a), Eq (SpecialDiffError a)) => SpecialDiff a where
+  -- | A custom diff error type for the special case.
+  type SpecialDiffError a
+
+  -- | Compare two values. The result will be converted to a 'DiffResult': 'Nothing' will result
+  -- in 'Equal', whereas a 'Just' result will be converted to a 'DiffError' using 'DiffSpecial'.
+  specialDiff :: a -> a -> Maybe (SpecialDiffError a)
+
+  -- | As well as specifying how two diff two values, we also have to specify how to render
+  -- the output. See the helper functions in "Generics.Diff.Render".
+  renderSpecialDiffError :: SpecialDiffError a -> Doc
+
+------------------------------------------------------------
+-- Rendering
+
+{- | Configuration type used to tweak the output of 'Generics.Diff.Render.renderDiffResultWith'.
+
+Use 'Generics.Diff.Render.defaultRenderOpts' and the field accessors below to construct.
+-}
+data RenderOpts = RenderOpts
+  { indentSize :: Natural
+  -- ^ How many spaces to indent each new "level" of comparison.
+  , numberedLevels :: Bool
+  -- ^ Whether or not to include level numbers in the output.
+  }
+  deriving (Show)
+
+{- | An intermediate representation for diff output.
+
+We constrain output to follow a very simple pattern:
+
+- 'docLines' is a non-empty series of preliminary lines describing the error.
+- 'docSubDoc' is an optional 'Doc' representing a nested error, e.g. in 'FieldMismatch'.
+-}
+data Doc = Doc
+  { docLines :: NonEmpty TB.Builder
+  , docSubDoc :: Maybe Doc
+  }
+  deriving (Show)
+
+------------------------------------------------------------
 -- Instance madness
+
+deriving instance (Show (DiffError a))
+
+deriving instance (Eq (DiffError a))
 
 eqPair :: (f a -> f a -> Bool) -> (g a -> g a -> Bool) -> (f :*: g) a -> (f :*: g) a -> Bool
 eqPair onF onG (f1 :*: g1) (f2 :*: g2) =

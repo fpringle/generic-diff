@@ -22,14 +22,14 @@ module Generics.Diff.Render
   , renderDiffErrorWith
   , renderDiffErrorNested
   , renderDiffErrorNestedWith
-  , renderListDiffError
-  , renderListDiffErrorWith
 
     -- * Intermediate representation
   , Doc (..)
   , diffErrorDoc
   , renderDoc
-  , showR
+  , listDiffErrorDoc
+  , diffErrorNestedDoc
+  , showB
   , linesDoc
   , makeDoc
   )
@@ -42,19 +42,6 @@ import qualified Data.Text.Lazy.Builder as TB
 import qualified Data.Text.Lazy.IO as TL
 import Generics.Diff.Type
 import Generics.SOP as SOP
-import Numeric.Natural
-
-{- | Configuration type used to tweak the output of 'renderDiffResultWith'.
-
-Use 'defaultRenderOpts' and the field accessors below to construct.
--}
-data RenderOpts = RenderOpts
-  { indentSize :: Natural
-  -- ^ How many spaces to indent each new "level" of comparison.
-  , numberedLevels :: Bool
-  -- ^ Whether or not to include level numbers in the output.
-  }
-  deriving (Show)
 
 -- | Sensible rendering defaults. No numbers, 2-space indentation.
 defaultRenderOpts :: RenderOpts
@@ -97,31 +84,10 @@ renderDiffErrorNested = renderDiffErrorNestedWith defaultRenderOpts
 renderDiffErrorNestedWith :: RenderOpts -> DiffErrorNested xss -> TB.Builder
 renderDiffErrorNestedWith opts = renderDoc opts 0 . diffErrorNestedDoc
 
--- | Render a 'ListDiffError' using a lazy 'TB.Builder'.
-renderListDiffError :: ListDiffError xss -> TB.Builder
-renderListDiffError = renderListDiffErrorWith defaultRenderOpts
-
--- | Render a 'ListDiffError' using a lazy 'TB.Builder', using custom 'RenderOpts'.
-renderListDiffErrorWith :: RenderOpts -> ListDiffError xss -> TB.Builder
-renderListDiffErrorWith opts = renderDoc opts 0 . listDiffErrorDoc "list"
-
 ------------------------------------------------------------
 -- Doc representation
 -- Rendering a 'DiffResult' happens in two steps: converting our strict SOP types into a much simpler
 -- intermediate representation, and then laying them out in a nice way.
-
-{- | An intermediate representation for diff output.
-
-We constrain output to follow a very simple pattern:
-
-- 'docLines' is a non-empty series of preliminary lines describing the error.
-- 'docSubDoc' is an optional 'Doc' representing a nested error, e.g. in 'FieldMismatch'.
--}
-data Doc = Doc
-  { docLines :: NonEmpty TB.Builder
-  , docSubDoc :: Maybe Doc
-  }
-  deriving (Show)
 
 -- | Create a 'Doc' with a non-empty list of lines and a nested error.
 makeDoc :: NonEmpty TB.Builder -> DiffError a -> Doc
@@ -137,25 +103,45 @@ diffResultDoc = \case
   Error err -> diffErrorDoc err
 
 -- | Convert a 'DiffError' to a 'Doc'.
-diffErrorDoc :: DiffError a -> Doc
+diffErrorDoc :: forall a. DiffError a -> Doc
 diffErrorDoc = \case
   TopLevelNotEqual -> linesDoc (pure "Not equal")
   Nested err -> diffErrorNestedDoc err
-  DiffList listErr -> listDiffErrorDoc "list" listErr
-  DiffNonEmpty listErr -> listDiffErrorDoc "non-empty list" listErr
+  DiffSpecial err -> renderSpecialDiffError @a err
 
+{- | Convert a 'ListDiffError' to a 'Doc'.
+
+The first argument gives us a name for the type of list, for clearer output.
+For example:
+
+@
+ghci> 'TL.putStrLn' . 'TB.toLazyText' . 'renderDoc' 'defaultRenderOpts' 0 . 'listDiffErrorDoc' "list" $ 'DiffAtIndex' 3 'TopLevelNotEqual'
+Diff at list index 3 (0-indexed)
+  Not equal
+
+ghci> TL.putStrLn . TB.toLazyText . renderDoc defaultRenderOpts 0 . listDiffErrorDoc "non-empty list" $ WrongLengths 3 5
+non-empty lists are wrong lengths
+Length of left list: 3
+Length of right list: 5
+@
+-}
 listDiffErrorDoc :: TB.Builder -> ListDiffError a -> Doc
 listDiffErrorDoc lst = \case
   DiffAtIndex idx err ->
-    let lns = pure $ "Diff at " <> lst <> " index " <> showR idx <> " (0-indexed)"
+    let lns = pure $ "Diff at " <> lst <> " index " <> showB idx <> " (0-indexed)"
     in  makeDoc lns err
   WrongLengths l r ->
     linesDoc $
-      "Lists are wrong lengths"
-        :| [ "Length of left list: " <> showR l
-           , "Length of right list: " <> showR r
+      (lst <> "s are wrong lengths")
+        :| [ "Length of left list: " <> showB l
+           , "Length of right list: " <> showB r
            ]
 
+{- | Convert a 'DiffErrorNested' to a 'Doc'.
+
+This is exported in the case that we want to implement an instance of 'Generics.Diff.Diff' for an existing type (e.g.
+from a 3rd-party library) that does not have a 'SOP.Generic' instance.
+-}
 diffErrorNestedDoc :: DiffErrorNested xss -> Doc
 diffErrorNestedDoc = \case
   WrongConstructor l r ->
@@ -227,7 +213,7 @@ unpackAtLocErr cInfo nsErr =
 
 renderRField :: RField -> TB.Builder
 renderRField = \case
-  IdxField n -> "In field " <> showR n <> " (0-indexed)"
+  IdxField n -> "In field " <> showB n <> " (0-indexed)"
   InfixField side -> case side of
     ILeft -> "In the left-hand field"
     IRight -> "In the right-hand field"
@@ -241,9 +227,9 @@ unlinesB (b : bs) = b <> TB.singleton '\n' <> unlinesB bs
 unlinesB [] = mempty
 
 -- | 'show' a value as a 'TB.Builder'.
-showR :: (Show a) => a -> TB.Builder
-showR = TB.fromString . show
-{-# INLINE showR #-}
+showB :: (Show a) => a -> TB.Builder
+showB = TB.fromString . show
+{-# INLINE showB #-}
 
 liftANS :: forall f g xs. (forall a. f a -> g a) -> NS f xs -> NS g xs
 liftANS f = go
@@ -256,7 +242,7 @@ liftANS f = go
 mkIndent :: RenderOpts -> Bool -> Int -> TB.Builder
 mkIndent RenderOpts {..} isFirst ind =
   let spaces = TB.fromText (T.replicate (ind * fromIntegral indentSize) " ")
-      number = showR (ind + 1) <> ". "
+      number = showB (ind + 1) <> ". "
       noNumber = "   "
 
       withNumber = spaces <> number

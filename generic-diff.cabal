@@ -74,6 +74,8 @@ library
       Generics.Diff
       Generics.Diff.Instances
       Generics.Diff.Render
+      Generics.Diff.Special
+      Generics.Diff.Special.List
   other-modules:
       Generics.Diff.Class
       Generics.Diff.Type
