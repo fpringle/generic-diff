@@ -73,7 +73,7 @@ This corresponds to a grid with one row per constructor, one column per field:
 A value of type @MyType@ can be thought of as being one row of the grid, with one value for each
 column in the row.
 
-Now, if we have two values of type @MyType@, there's too main ways they can differ. If they inhabit
+Now, if we have two values of type @MyType@, there's two main ways they can differ. If they inhabit
 different rows of the grid, they're clearly not equal, and all we can say is "this one uses this
 constructor, that one uses that constructor" (see 'WrongConstructor'). In other words we just report the
 names of the two rows.
