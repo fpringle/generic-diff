@@ -1,0 +1,3 @@
+packages:
+    ./generic-diff.cabal
+    examples/containers-instances/generic-diff-containers.cabal
