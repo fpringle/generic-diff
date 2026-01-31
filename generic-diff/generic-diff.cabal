@@ -7,6 +7,9 @@ description:
   using [generics-sop](https://hackage.haskell.org/package/generics-sop).
 
   See the module documentation in "Generics.Diff".
+
+  For a wider range of instances for common types, see
+  [generic-diff-instances](https://hackage.haskell.org/package/generic-diff-instances).
 license:            BSD-3-Clause
 license-file:       LICENSE
 author:             Frederick Pringle
