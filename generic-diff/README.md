@@ -1,5 +1,3 @@
-[![Haskell CI](https://github.com/fpringle/generic-diff/actions/workflows/haskell.yml/badge.svg)](https://github.com/fpringle/generic-diff/actions/workflows/haskell.yml)
-
 # Generic structural diffs
 
 `generic-diff` lets us pinpoint exactly where two values differ, which can be very useful, for example for debugging failing tests.
