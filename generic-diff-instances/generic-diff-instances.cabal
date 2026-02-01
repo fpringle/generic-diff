@@ -1,6 +1,6 @@
 cabal-version:      3.0
 name:               generic-diff-instances
-version:            0.1.0.0
+version:            0.1.0.1
 synopsis:           Diff instances for common types
 description:
   The [generic-diff](https://hackage.haskell.org/package/generic-diff) package
