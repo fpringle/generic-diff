@@ -1,14 +1,15 @@
 cabal-version:      3.0
-name:               generic-diff
+name:               generic-diff-instances
 version:            0.1.0.0
-synopsis:           Generic structural diffs
+synopsis:           Diff instances for common types
 description:
-  Generic structural diffs on arbitrary datatypes,
-  using [generics-sop](https://hackage.haskell.org/package/generics-sop).
+  The [generic-diff](https://hackage.haskell.org/package/generic-diff) package
+  aims to be lightweight and not force any instances which might have more than
+  one interpretation.
 
-  See the module documentation in "Generics.Diff".
+  This package provides a more comprehensive set of instances for types from a
+  range of common packages.
 license:            BSD-3-Clause
-license-file:       LICENSE
 author:             Frederick Pringle
 maintainer:         freddyjepringle@gmail.com
 copyright:          Copyright(c) Frederick Pringle 2025
@@ -28,19 +29,17 @@ tested-with:
   GHC == 8.10.7
   GHC == 8.6.5
 
-source-repository head
-  type:     git
-  location: https://github.com/fpringle/generic-diff.git
-
 common warnings
   ghc-options: -Wall
 
 common deps
   build-depends:
     , base >= 4.12 && < 5
+    , generic-diff >= 0.1 && < 0.2
     , sop-core >= 0.4.0.1 && < 0.6
     , generics-sop >= 0.4 && < 0.6
     , text >= 1.1 && < 2.2
+    , containers >= 0.5.9.2 && < 0.9
 
 common extensions
   default-extensions:
@@ -71,19 +70,15 @@ library
     , deps
     , extensions
   exposed-modules:
-      Generics.Diff
-      Generics.Diff.Instances
-      Generics.Diff.Render
-      Generics.Diff.Special
-      Generics.Diff.Special.List
-  other-modules:
-      Generics.Diff.Class
-      Generics.Diff.Type
+      Generics.Diff.Special.Seq
+      Generics.Diff.Special.Map
+      Generics.Diff.Special.Set
+      Generics.Diff.Special.Tree
 
   hs-source-dirs:   src
   default-language: Haskell2010
 
-test-suite generic-diff-test
+test-suite generic-diff-instances-test
   import:
       warnings
     , deps
@@ -101,6 +96,6 @@ test-suite generic-diff-test
   ghc-options:      -Wno-orphans
   build-depends:
     , generic-diff
+    , generic-diff-instances
     , QuickCheck
     , hspec
-    , basic-sop

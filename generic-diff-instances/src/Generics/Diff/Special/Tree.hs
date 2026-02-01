@@ -1,7 +1,7 @@
 {-# LANGUAGE DerivingVia #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-{- | A worked example of implementing 'SpecialDiff' (and thereby 'Diff') for 'Tree's.
+{- | A worked example of implementing 'SpecialDiff' (and thereby 'Diff') for 'Tree.Tree's.
 
 As with other 3rd-party types, there are different approaches we can take here. We'll show 2 of them:
 
@@ -22,6 +22,7 @@ import Generics.SOP.GGP
 ------------------------------------------------------------
 -- Using gspecialDiffNested
 
+-- | Generically-derived instance.
 instance (Diff a) => SpecialDiff (Tree.Tree a) where
   type SpecialDiffError (Tree.Tree a) = DiffErrorNested (GCode (Tree.Tree a))
   specialDiff = gspecialDiffNested
@@ -33,17 +34,23 @@ instance (Diff a) => Diff (Tree.Tree a) where
 ------------------------------------------------------------
 -- Using SpecialDiff
 
+{- | A newtype wrapper around 'Tree.Tree' to demonstrate one alternate way we could hand-write
+a 'SpecialDiff' instance.
+-}
 newtype CustomTree a = CustomTree (Tree.Tree a)
   deriving (Show) via (Tree.Tree a)
 
+-- | Where are we in the tree? Each element of the list says which child node we step to next.
 newtype TreePath = TreePath [Int]
   deriving (Show, Eq) via [Int]
 
+-- | A custom error type for 'CustomTree'.
 data CustomTreeDiffError a
   = DiffAtNode TreePath (DiffError a)
   | WrongLengthsOfChildren TreePath Int Int
   deriving (Show, Eq)
 
+-- | Render a tree path as a 'TB.Builder'
 renderTreePath :: TreePath -> TB.Builder
 renderTreePath (TreePath []) = "<root>"
 renderTreePath (TreePath (x : xs)) = mconcat $ showB x : ["->" <> showB y | y <- xs]

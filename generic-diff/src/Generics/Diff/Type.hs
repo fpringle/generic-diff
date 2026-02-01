@@ -81,8 +81,8 @@ such as lists (see 'ListDiffError'), or even user-defined types that internally 
 or have unusual 'Eq' instances. In this case we can implement an instance of 'SpecialDiff' for the
 type.
 
-For concrete examples implementing 'SpecialDiff' on types from "containers", see the
-[examples/containers-instances](https://github.com/fpringle/generic-diff/tree/main/examples/containers-instances)
+For concrete implementations of 'SpecialDiff' on types from "containers", see
+[generic-diff-instances](https://hackage.haskell.org/package/generic-diff-instances).
 directory.
 -}
 class (Show (SpecialDiffError a), Eq (SpecialDiffError a)) => SpecialDiff a where

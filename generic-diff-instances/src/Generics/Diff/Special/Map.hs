@@ -30,7 +30,7 @@ data MapDiffError k v
   deriving (Show, Eq)
 
 {- | Render a 'MapDiffError'. This is a top-level function because we'll use it in the implementations
-of 'renderSpecialDiffError' for both 'Map' and 'IntMap'.
+of 'renderSpecialDiffError' for both 'Map' and 'Data.IntMap.IntMap'.
 -}
 mapDiffErrorDoc :: (Show k) => MapDiffError k v -> Doc
 mapDiffErrorDoc = \case
@@ -42,9 +42,6 @@ mapDiffErrorDoc = \case
     linesDoc $ pure $ "The right map contains key " <> showB k <> " but the left doesn't"
   RightMissingKey k ->
     linesDoc $ pure $ "The left map contains key " <> showB k <> " but the right doesn't"
-
-------------------------------------------------------------
--- Map
 
 instance (Show k, Ord k, Diff v) => SpecialDiff (Map k v) where
   type SpecialDiffError (Map k v) = MapDiffError k v
@@ -67,6 +64,5 @@ instance (Show k, Ord k, Diff v) => SpecialDiff (Map k v) where
 
   renderSpecialDiffError = mapDiffErrorDoc
 
--- | Now we can implement 'Diff' using 'diffWithSpecial'.
 instance (Show k, Ord k, Diff v) => Diff (Map k v) where
   diff = diffWithSpecial
