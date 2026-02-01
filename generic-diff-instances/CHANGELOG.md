@@ -13,5 +13,5 @@ and this project adheres to [Haskell Package Versioning Policy](https://pvp.hask
 
 - `Diff` instances for `Map`, `Seq`, `Set` and `Tree` from `containers`.
 
-[unreleased]: https://github.com/fpringle/generic-diff/compare/instance-v0.1.0.0...HEAD
+[unreleased]: https://github.com/fpringle/generic-diff/compare/instances-v0.1.0.0...HEAD
 [0.1.0.0]: https://github.com/fpringle/generic-diff/releases/tag/instances-v0.1.0.0
