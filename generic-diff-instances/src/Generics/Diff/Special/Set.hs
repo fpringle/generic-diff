@@ -31,7 +31,7 @@ data SetDiffError k
   deriving (Show, Eq)
 
 {- | Render a 'SetDiffError'. This is a top-level function because we'll use it in the implementations
-of 'renderSpecialDiffError' for both 'Set' and 'IntSet'.
+of 'renderSpecialDiffError' for both 'Set' and 'Data.IntSet.IntSet'.
 
 There are no nested 'DiffError's here, so we use 'linesDoc'.
 -}
@@ -42,9 +42,8 @@ setDiffErrorDoc = \case
   RightMissingKey k ->
     linesDoc $ pure $ "The left set contains key " <> showB k <> " but the right doesn't"
 
-{- | First we define an instance of 'SpecialDiff'. We need 'Show' and 'Eq' so that 'SetDiffError'
-also has these instances; we need 'Ord' to compare elements of the set.
--}
+-- First we define an instance of 'SpecialDiff'. We need 'Show' and 'Eq' so that 'SetDiffError'
+-- also has these instances; we need 'Ord' to compare elements of the set.
 instance (Show k, Eq k, Ord k) => SpecialDiff (Set k) where
   type SpecialDiffError (Set k) = SetDiffError k
 
@@ -62,6 +61,6 @@ instance (Show k, Eq k, Ord k) => SpecialDiff (Set k) where
 
   renderSpecialDiffError = setDiffErrorDoc
 
--- | Now we can implement 'Diff' using 'diffWithSpecial'.
+-- Now we can implement 'Diff' using 'diffWithSpecial'.
 instance (Show k, Ord k) => Diff (Set k) where
   diff = diffWithSpecial
