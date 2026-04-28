@@ -106,6 +106,12 @@ diffResultDoc = \case
 diffErrorDoc :: forall a. DiffError a -> Doc
 diffErrorDoc = \case
   TopLevelNotEqual -> linesDoc (pure "Not equal")
+  TopLevelNotEqualShow l r ->
+    linesDoc $
+      "Not equal"
+        :| [ "Left value:  " <> TB.fromText l
+           , "Right value: " <> TB.fromText r
+           ]
   Nested err -> diffErrorNestedDoc err
   DiffSpecial err -> renderSpecialDiffError @a err
 
