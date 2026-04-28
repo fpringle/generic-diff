@@ -107,7 +107,7 @@ mapTestSets =
     value1 = Map.fromList [(1, "one"), (3, "three")]
 
     value2 = Map.fromList [(1, "one"), (3, "THREE")]
-    error2 = DiffSpecial $ Map.DiffAtKey 3 TopLevelNotEqual
+    error2 = DiffSpecial $ Map.DiffAtKey 3 $ TopLevelNotEqualShow "\"three\"" "\"THREE\""
 
     value3 = Map.fromList [(1, "one"), (2, "two"), (3, "three")]
     error3 = DiffSpecial $ Map.LeftMissingKey 2
@@ -143,7 +143,7 @@ seqTestSets =
     error2 = DiffSpecial $ WrongLengths 2 3
 
     value3 = Seq.fromList [1, 2]
-    error3 = DiffSpecial $ DiffAtIndex 1 TopLevelNotEqual
+    error3 = DiffSpecial $ DiffAtIndex 1 $ TopLevelNotEqualShow "3" "2"
 
 treeTestSets :: [TestSet (Tree Int)]
 treeTestSets =
@@ -176,7 +176,7 @@ treeTestSets =
     value1 = Tree.Node 1 [Tree.Node 2 [], Tree.Node 3 [Tree.Node 4 [], Tree.Node 5 []]]
 
     value2 = Tree.Node 2 []
-    error2 = DiffSpecial $ FieldMismatch $ DiffAtField $ Z $ nodeInfo :*: Z TopLevelNotEqual
+    error2 = DiffSpecial $ FieldMismatch $ DiffAtField $ Z $ nodeInfo :*: Z (TopLevelNotEqualShow "1" "2")
 
     value3 = Tree.Node 1 [Tree.Node 2 []]
     error3 =
@@ -185,7 +185,7 @@ treeTestSets =
 
     value4 = Tree.Node 1 [Tree.Node 2 [], Tree.Node 4 []]
     error4 =
-      let e = DiffSpecial $ DiffAtIndex 1 $ DiffSpecial $ FieldMismatch $ DiffAtField $ Z $ nodeInfo :*: Z TopLevelNotEqual
+      let e = DiffSpecial $ DiffAtIndex 1 $ DiffSpecial $ FieldMismatch $ DiffAtField $ Z $ nodeInfo :*: Z (TopLevelNotEqualShow "3" "4")
       in  DiffSpecial $ FieldMismatch $ DiffAtField $ Z $ nodeInfo :*: S (Z e)
 
     nodeInfo :: ConstructorInfo '[Int, [Tree Int]]
@@ -222,10 +222,10 @@ customTreeTestSets =
     value1 = CustomTree $ Tree.Node 1 [Tree.Node 2 [], Tree.Node 3 [Tree.Node 4 [], Tree.Node 5 []]]
 
     value2 = CustomTree $ Tree.Node 2 []
-    error2 = DiffSpecial $ DiffAtNode (TreePath []) TopLevelNotEqual
+    error2 = DiffSpecial $ DiffAtNode (TreePath []) $ TopLevelNotEqualShow "1" "2"
 
     value3 = CustomTree $ Tree.Node 1 [Tree.Node 2 []]
     error3 = DiffSpecial $ WrongLengthsOfChildren (TreePath []) 2 1
 
     value4 = CustomTree $ Tree.Node 1 [Tree.Node 2 [], Tree.Node 4 []]
-    error4 = DiffSpecial $ DiffAtNode (TreePath [1]) TopLevelNotEqual
+    error4 = DiffSpecial $ DiffAtNode (TreePath [1]) $ TopLevelNotEqualShow "3" "4"
