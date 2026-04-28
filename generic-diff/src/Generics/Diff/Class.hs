@@ -172,7 +172,7 @@ diffListWith d = go 0
 otherwise, return 'TopLevelNotEqual'.
 
 Note that if @a@ has a 'Show' instance, then 'eqDiffShow' is more informative since
-it actually displays the compares values.
+it actually displays the compared values.
 -}
 eqDiff :: (Eq a) => a -> a -> DiffResult a
 eqDiff a b =
@@ -207,8 +207,8 @@ gdiff = gdiffWithPure @a @Diff (Differ diff)
 {- | Alternate implementation of 'diff' - basically one level of 'gdiff'. To compare individual fields of the
 top-level values, we just use '(==)'.
 
-Note that if @a@ has a 'Show' instance, then 'eqDiffShow' is more informative since
-it actually displays the compares values.
+Note that if @a@ has a 'Show' instance, then 'gdiffTopLevelShow' is more informative since
+it actually displays the compared values.
 -}
 gdiffTopLevel ::
   forall a.
