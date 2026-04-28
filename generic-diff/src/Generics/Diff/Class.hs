@@ -7,8 +7,10 @@ module Generics.Diff.Class
 
     -- ** Implementing diff
   , gdiff
+  , gdiffTopLevelShow
   , gdiffTopLevel
   , gdiffWith
+  , eqDiffShow
   , eqDiff
   , diffWithSpecial
   , gspecialDiffNested
@@ -20,6 +22,7 @@ where
 
 import Data.SOP
 import Data.SOP.NP
+import qualified Data.Text as T
 import qualified GHC.Generics as G
 import Generics.Diff.Render
 import Generics.Diff.Type
@@ -169,6 +172,19 @@ eqDiff a b =
     then Equal
     else Error TopLevelNotEqual
 
+tshow :: (Show a) => a -> T.Text
+tshow = T.pack . show
+{-# INLINE tshow #-}
+
+{- | Like 'eqDiff', 'eqDiffShow' only compares the values at the top-level. It also includes
+a textual representation of the compared values.
+-}
+eqDiffShow :: (Eq a, Show a) => a -> a -> DiffResult a
+eqDiffShow a b =
+  if a == b
+    then Equal
+    else Error $ TopLevelNotEqualShow (tshow a) (tshow b)
+
 {- | The default implementation of 'diff'. Follows the procedure described above. We keep recursing
 into the 'Diff' instances of the field types, as far as we can.
 -}
@@ -190,6 +206,15 @@ gdiffTopLevel ::
   a ->
   DiffResult a
 gdiffTopLevel = gdiffWithPure @a @Eq (Differ eqDiff)
+
+-- | Same as 'gdiffTopLevel', but includes a textual representation of the compared values.
+gdiffTopLevelShow ::
+  forall a.
+  (Generic a, HasDatatypeInfo a, All2 (And Eq Show) (Code a)) =>
+  a ->
+  a ->
+  DiffResult a
+gdiffTopLevelShow = gdiffWithPure @a @(And Eq Show) (Differ eqDiffShow)
 
 {- | Follow the same algorithm as 'gdiff', but the caller can provide their own 'POP' grid of 'Differ's
 specifying how to compare each field we might come across.

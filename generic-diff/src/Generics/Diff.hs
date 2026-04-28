@@ -172,8 +172,10 @@ module Generics.Diff
 
     -- ** Implementing diff
   , gdiff
+  , gdiffTopLevelShow
   , gdiffTopLevel
   , gdiffWith
+  , eqDiffShow
   , eqDiff
 
     -- * Types
