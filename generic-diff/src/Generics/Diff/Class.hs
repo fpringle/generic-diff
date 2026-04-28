@@ -71,7 +71,7 @@ ghci> diff Plus Minus
 Error (Nested (WrongConstructor (Z (Constructor \"Plus\")) (S (Z (Constructor \"Minus\")))))
 
 ghci> diff (Atom 1) (Atom 2)
-Error (Nested (FieldMismatch (AtLoc (Z (Constructor \"Atom\" :*: Z (Nested TopLevelNotEqual))))))
+Error (Nested (FieldMismatch (AtLoc (Z (Constructor \"Atom\" :*: Z (Nested $ TopLevelNotEqualShow \"1\" \"2\"))))))
 
 ghci> diff (Bin (Atom 1) Plus (Atom 1)) (Atom 2)
 Error (Nested (WrongConstructor (S (Z (Constructor \"Bin\"))) (Z (Constructor \"Atom\"))))
@@ -80,7 +80,7 @@ ghci> diff (Bin (Atom 1) Plus (Atom 1)) (Bin (Atom 1) Minus (Atom 1))
 Error (Nested (FieldMismatch (AtLoc (S (Z (Constructor \"Bin\" :*: S (Z (Nested (WrongConstructor (Z (Constructor \"Plus\")) (S (Z (Constructor \"Minus\"))))))))))))
 
 ghci> diff (Bin (Atom 1) Plus (Atom 1)) (Bin (Atom 1) Plus (Atom 2))
-Error (Nested (FieldMismatch (DiffAtField (S (Z (Record \"Bin\" (FieldInfo \"left\" :* FieldInfo \"op\" :* FieldInfo \"right\" :* Nil) :*: S (S (Z (Nested (FieldMismatch (DiffAtField (Z (Constructor \"Atom\" :*: Z TopLevelNotEqual)))))))))))))
+Error (Nested (FieldMismatch (DiffAtField (S (Z (Record \"Bin\" (FieldInfo \"left\" :* FieldInfo \"op\" :* FieldInfo \"right\" :* Nil) :*: S (S (Z (Nested (FieldMismatch (DiffAtField (Z (Constructor \"Atom\" :*: Z $ TopLevelNotEqualShow "1" "2")))))))))))))
 @
 
 Of course, these are just as difficult to understand as derived 'Show' instances, or more so. Fortunately we can
@@ -99,6 +99,8 @@ ghci> printDiffResult $ diff (Atom 1) (Atom 2)
 Both values use constructor Atom but fields don't match
 In field 0 (0-indexed):
   Not equal
+  Left value:  1
+  Right value: 2
 
 ghci> printDiffResult $ diff (Bin (Atom 1) Plus (Atom 1)) (Atom 2)
 Wrong constructor
@@ -118,6 +120,8 @@ In field right:
   Both values use constructor Atom but fields don't match
   In field 0 (0-indexed):
     Not equal
+    Left value:  1
+    Right value: 2
 @
 
 = Laws
@@ -130,7 +134,8 @@ x == y   \<=\>  x \`diff\` y == 'Equal'
 -}
 class Diff a where
   -- | Detailed comparison of two values. It is strongly recommended to only use the
-  -- default implementation, or one of 'eqDiff' or 'gdiffTopLevel'.
+  -- default implementation, or one of 'eqDiffShow' or 'gdiffTopLevelShow'
+  -- (or 'eqDiff' or 'gdiffTopLevel' if the type doesn't have a 'Show' instance).
   diff :: a -> a -> DiffResult a
   default diff :: (Generic a, HasDatatypeInfo a, All2 Diff (Code a)) => a -> a -> DiffResult a
   diff = gdiff
@@ -165,6 +170,9 @@ diffListWith d = go 0
 
 {- | The most basic 'Differ' possible. If the two values are equal, return 'Equal';
 otherwise, return 'TopLevelNotEqual'.
+
+Note that if @a@ has a 'Show' instance, then 'eqDiffShow' is more informative since
+it actually displays the compares values.
 -}
 eqDiff :: (Eq a) => a -> a -> DiffResult a
 eqDiff a b =
@@ -198,6 +206,9 @@ gdiff = gdiffWithPure @a @Diff (Differ diff)
 
 {- | Alternate implementation of 'diff' - basically one level of 'gdiff'. To compare individual fields of the
 top-level values, we just use '(==)'.
+
+Note that if @a@ has a 'Show' instance, then 'eqDiffShow' is more informative since
+it actually displays the compares values.
 -}
 gdiffTopLevel ::
   forall a.

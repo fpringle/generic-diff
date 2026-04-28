@@ -125,6 +125,12 @@ ghci> 'TL.putStrLn' . 'TB.toLazyText' . 'renderDoc' 'defaultRenderOpts' 0 . 'lis
 Diff at list index 3 (0-indexed)
   Not equal
 
+ghci> 'TL.putStrLn' . 'TB.toLazyText' . 'renderDoc' 'defaultRenderOpts' 0 . 'listDiffErrorDoc' "list" $ 'DiffAtIndex' 3 $ 'TopLevelNotEqual' \"1\" \"2\"
+Diff at list index 3 (0-indexed)
+  Not equal
+  Left value:  1
+  Right value: 2
+
 ghci> TL.putStrLn . TB.toLazyText . renderDoc defaultRenderOpts 0 . listDiffErrorDoc "non-empty list" $ WrongLengths 3 5
 non-empty lists are wrong lengths
 Length of left list: 3
