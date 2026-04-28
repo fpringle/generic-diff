@@ -4,6 +4,7 @@ module Generics.Diff.Type where
 
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.SOP.NP
+import Data.Text (Text)
 import qualified Data.Text.Lazy.Builder as TB
 import Generics.SOP as SOP
 import Numeric.Natural
@@ -25,6 +26,8 @@ See 'SpecialDiff'.
 data DiffError a where
   -- | All we can say is that the values being compared are not equal.
   TopLevelNotEqual :: DiffError a
+  -- | Same as 'TopLevelNotEqual', but with a textual representation of the values that differ.
+  TopLevelNotEqualShow :: Text -> Text -> DiffError a
   -- | We've identified a diff at a certain constructor or field
   Nested :: DiffErrorNested (Code a) -> DiffError a
   -- | Special case for special cases
