@@ -23,6 +23,7 @@ shellFor {
     niv
     nixpkgs-fmt
     pre-commit
+    nixpkgs.haskellPackages.doctest
   ];
   shellHook = ''
     ${pre-commit-check.shellHook}
