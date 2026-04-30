@@ -29,6 +29,26 @@ import Generics.Diff.Type
 import Generics.SOP as SOP
 import Generics.SOP.GGP as SOP
 
+{- $setup
+>>> :set -XDerivingStrategies
+>>> :set -XDeriveGeneric
+>>> :set -XDeriveAnyClass
+>>> import Generics.Diff
+>>> import Generics.Diff.Render
+>>> import qualified GHC.Generics as G
+>>> import Generics.SOP as SOP
+>>> :{
+ data BinOp = Plus | Minus
+   deriving stock (Show, G.Generic)
+   deriving anyclass (SOP.Generic, SOP.HasDatatypeInfo, Diff)
+ data Expr
+   = Atom Int
+   | Bin {left :: Expr, op :: BinOp, right :: Expr}
+   deriving stock (Show, G.Generic)
+   deriving anyclass (SOP.Generic, SOP.HasDatatypeInfo, Diff)
+:}
+-}
+
 {- | A type with an instance of 'Diff' permits a more nuanced comparison than 'Eq' or 'Ord'.
 If two values are not equal, 'diff' will tell you exactly where they differ ("in this contructor,
 at that field"). The granularity of the pinpointing of the difference (how many "levels" of 'Diff'
@@ -62,59 +82,61 @@ data Expr
 
 Now that we have our instances, we can 'diff' values to find out exactly where they differ:
 
-@
 -- If two values are equal, 'diff' should always return 'Equal'.
-ghci> diff Plus Plus
+>>> diff Plus Plus
 Equal
 
-ghci> diff Plus Minus
-Error (Nested (WrongConstructor (Z (Constructor \"Plus\")) (S (Z (Constructor \"Minus\")))))
+>>> diff Plus Minus
+Error (Nested (WrongConstructor (Z (Constructor "Plus")) (S (Z (Constructor "Minus")))))
 
-ghci> diff (Atom 1) (Atom 2)
-Error (Nested (FieldMismatch (AtLoc (Z (Constructor \"Atom\" :*: Z (Nested $ TopLevelNotEqualShow \"1\" \"2\"))))))
+>>> diff (Atom 1) (Atom 2)
+Error (Nested (FieldMismatch (AtLoc (Z (Constructor "Atom" :*: Z (Nested $ TopLevelNotEqualShow "1" "2"))))))
 
-ghci> diff (Bin (Atom 1) Plus (Atom 1)) (Atom 2)
-Error (Nested (WrongConstructor (S (Z (Constructor \"Bin\"))) (Z (Constructor \"Atom\"))))
+>>> diff (Bin (Atom 1) Plus (Atom 1)) (Atom 2)
+Error (Nested (WrongConstructor (S (Z (Constructor "Bin"))) (Z (Constructor "Atom"))))
 
-ghci> diff (Bin (Atom 1) Plus (Atom 1)) (Bin (Atom 1) Minus (Atom 1))
-Error (Nested (FieldMismatch (AtLoc (S (Z (Constructor \"Bin\" :*: S (Z (Nested (WrongConstructor (Z (Constructor \"Plus\")) (S (Z (Constructor \"Minus\"))))))))))))
+>>> diff (Bin (Atom 1) Plus (Atom 1)) (Bin (Atom 1) Minus (Atom 1))
+Error (Nested (FieldMismatch (AtLoc (S (Z (Constructor "Bin" :*: S (Z (Nested (WrongConstructor (Z (Constructor "Plus")) (S (Z (Constructor "Minus"))))))))))))
 
-ghci> diff (Bin (Atom 1) Plus (Atom 1)) (Bin (Atom 1) Plus (Atom 2))
-Error (Nested (FieldMismatch (DiffAtField (S (Z (Record \"Bin\" (FieldInfo \"left\" :* FieldInfo \"op\" :* FieldInfo \"right\" :* Nil) :*: S (S (Z (Nested (FieldMismatch (DiffAtField (Z (Constructor \"Atom\" :*: Z $ TopLevelNotEqualShow "1" "2")))))))))))))
-@
+>>> diff (Bin (Atom 1) Plus (Atom 1)) (Bin (Atom 1) Plus (Atom 2))
+Error (Nested (FieldMismatch (DiffAtField (S (Z (Record "Bin" (FieldInfo "left" :* FieldInfo "op" :* FieldInfo "right" :* Nil) :*: S (S (Z (Nested (FieldMismatch (DiffAtField (Z (Constructor "Atom" :*: Z $ TopLevelNotEqualShow "1" "2")))))))))))))
 
 Of course, these are just as difficult to understand as derived 'Show' instances, or more so. Fortunately we can
 use the functions in "Generics.Diff.Render" to get a nice, intuitive representation of the diffs:
 
-@
-ghci> printDiffResult $ diff Plus Plus
+>>> printDiffResult $ diff Plus Plus
 Equal
+<BLANKLINE>
 
-ghci> printDiffResult $ diff Plus Minus
+>>> printDiffResult $ diff Plus Minus
 Wrong constructor
 Constructor of left value: Plus
 Constructor of right value: Minus
+<BLANKLINE>
 
-ghci> printDiffResult $ diff (Atom 1) (Atom 2)
+>>> printDiffResult $ diff (Atom 1) (Atom 2)
 Both values use constructor Atom but fields don't match
 In field 0 (0-indexed):
   Not equal
   Left value:  1
   Right value: 2
+<BLANKLINE>
 
-ghci> printDiffResult $ diff (Bin (Atom 1) Plus (Atom 1)) (Atom 2)
+>>> printDiffResult $ diff (Bin (Atom 1) Plus (Atom 1)) (Atom 2)
 Wrong constructor
 Constructor of left value: Bin
 Constructor of right value: Atom
+<BLANKLINE>
 
-ghci> printDiffResult $ diff (Bin (Atom 1) Plus (Atom 1)) (Bin (Atom 1) Minus (Atom 1))
+>>> printDiffResult $ diff (Bin (Atom 1) Plus (Atom 1)) (Bin (Atom 1) Minus (Atom 1))
 Both values use constructor Bin but fields don't match
 In field op:
   Wrong constructor
   Constructor of left value: Plus
   Constructor of right value: Minus
+<BLANKLINE>
 
-ghci> printDiffResult $ diff (Bin (Atom 1) Plus (Atom 1)) (Bin (Atom 1) Plus (Atom 2))
+>>> printDiffResult $ diff (Bin (Atom 1) Plus (Atom 1)) (Bin (Atom 1) Plus (Atom 2))
 Both values use constructor Bin but fields don't match
 In field right:
   Both values use constructor Atom but fields don't match
@@ -122,7 +144,7 @@ In field right:
     Not equal
     Left value:  1
     Right value: 2
-@
+<BLANKLINE>
 
 = Laws
 
