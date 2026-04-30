@@ -18,11 +18,7 @@ let
       haskell-overrides = hfinal: hprev:
         let
           # When we pin specific versions of Haskell packages, they'll go here using callCabal2Nix.
-          packageOverrides = {
-            # postgresql-operation-counting = hfinal.callCabal2nix "postgresql-operation-counting" sources.postgresql-operation-counting { };
-            # postgresql-operation-counting = hfinal.callCabal2nix "postgresql-operation-counting" "${sources.postgresql-operation-counting}" { };
-            postgresql-operation-counting = import "${sources.postgresql-operation-counting}";
-          };
+          packageOverrides = { };
 
           makePackage = name: path:
             let pkg = hfinal.callCabal2nix name (gitignore path) { };
