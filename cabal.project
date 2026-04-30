@@ -1,3 +1,6 @@
 packages:
     ./generic-diff/generic-diff.cabal
     ./generic-diff-instances/generic-diff-instances.cabal
+
+write-ghc-environment-files: always
+tests: True
