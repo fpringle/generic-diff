@@ -131,7 +131,7 @@ Diff at list index 3 (0-indexed)
   Not equal
 <BLANKLINE>
 
->>> TL.putStrLn . TB.toLazyText . renderDoc defaultRenderOpts 0 . listDiffErrorDoc "list" $ DiffAtIndex 3 $ TopLevelNotEqual "1" "2"
+>>> TL.putStrLn . TB.toLazyText . renderDoc defaultRenderOpts 0 . listDiffErrorDoc "list" $ DiffAtIndex 3 $ TopLevelNotEqualShow "1" "2"
 Diff at list index 3 (0-indexed)
   Not equal
   Left value:  1

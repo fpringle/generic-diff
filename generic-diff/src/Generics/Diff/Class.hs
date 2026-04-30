@@ -92,16 +92,16 @@ Equal
 Error (Nested (WrongConstructor (Z (Constructor "Plus")) (S (Z (Constructor "Minus")))))
 
 >>> diff (Atom 1) (Atom 2)
-Error (Nested (FieldMismatch (AtLoc (Z (Constructor "Atom" :*: Z (Nested $ TopLevelNotEqualShow "1" "2"))))))
+Error (Nested (FieldMismatch (DiffAtField (Z (Constructor "Atom" :*: Z (TopLevelNotEqualShow "1" "2"))))))
 
 >>> diff (Bin (Atom 1) Plus (Atom 1)) (Atom 2)
-Error (Nested (WrongConstructor (S (Z (Constructor "Bin"))) (Z (Constructor "Atom"))))
+Error (Nested (WrongConstructor (S (Z (Record "Bin" (FieldInfo "left" :* FieldInfo "op" :* FieldInfo "right" :* Nil)))) (Z (Constructor "Atom"))))
 
 >>> diff (Bin (Atom 1) Plus (Atom 1)) (Bin (Atom 1) Minus (Atom 1))
-Error (Nested (FieldMismatch (AtLoc (S (Z (Constructor "Bin" :*: S (Z (Nested (WrongConstructor (Z (Constructor "Plus")) (S (Z (Constructor "Minus"))))))))))))
+Error (Nested (FieldMismatch (DiffAtField (S (Z (Record "Bin" (FieldInfo "left" :* FieldInfo "op" :* FieldInfo "right" :* Nil) :*: S (Z (Nested (WrongConstructor (Z (Constructor "Plus")) (S (Z (Constructor "Minus"))))))))))))
 
 >>> diff (Bin (Atom 1) Plus (Atom 1)) (Bin (Atom 1) Plus (Atom 2))
-Error (Nested (FieldMismatch (DiffAtField (S (Z (Record "Bin" (FieldInfo "left" :* FieldInfo "op" :* FieldInfo "right" :* Nil) :*: S (S (Z (Nested (FieldMismatch (DiffAtField (Z (Constructor "Atom" :*: Z $ TopLevelNotEqualShow "1" "2")))))))))))))
+Error (Nested (FieldMismatch (DiffAtField (S (Z (Record "Bin" (FieldInfo "left" :* FieldInfo "op" :* FieldInfo "right" :* Nil) :*: S (S (Z (Nested (FieldMismatch (DiffAtField (Z (Constructor "Atom" :*: Z (TopLevelNotEqualShow "1" "2"))))))))))))))
 
 Of course, these are just as difficult to understand as derived 'Show' instances, or more so. Fortunately we can
 use the functions in "Generics.Diff.Render" to get a nice, intuitive representation of the diffs:
