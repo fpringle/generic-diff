@@ -1,3 +1,5 @@
 packages:
     ./generic-diff/generic-diff.cabal
     ./generic-diff-instances/generic-diff-instances.cabal
+
+tests: True
