@@ -120,9 +120,12 @@ jobs:
           cabal build --only-dependencies --enable-tests --enable-benchmarks ${{ matrix.package }}
       - name: Build
         run: cabal build --enable-tests --enable-benchmarks ${{ matrix.package }}
-      - name: Run tests
-        # https://github.com/fpringle/generic-diff/actions/runs/15353395135/job/43206848857?pr=10
+      - name: Run test suite
         run: |
-          cabal configure --enable-tests
           cd $(dirname ${{ matrix.cabal_file }})
-          cabal test --enable-tests
+          cabal run ${{ matrix.package }}-test
+      - name: Run doctests
+        run: |
+          if [[ "${{ matrix.package }}" == "generic-diff" ]]; then
+            cabal run doctests
+          fi
