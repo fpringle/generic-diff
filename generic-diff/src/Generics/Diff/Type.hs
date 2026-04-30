@@ -9,6 +9,28 @@ import qualified Data.Text.Lazy.Builder as TB
 import Generics.SOP as SOP
 import Numeric.Natural
 
+{- $setup
+>>> :set -XDerivingStrategies
+>>> :set -XDeriveGeneric
+>>> :set -XDeriveAnyClass
+>>> import Generics.Diff
+>>> import Generics.Diff.Render
+>>> import qualified GHC.Generics as G
+>>> import Generics.SOP as SOP
+>>> :{
+ data BinOp = Plus | Minus
+   deriving stock (Show, G.Generic)
+   deriving anyclass (SOP.Generic, SOP.HasDatatypeInfo, Diff)
+ data Expr
+   = Atom Int
+   | Bin {left :: Expr, op :: BinOp, right :: Expr}
+   deriving stock (Show, G.Generic)
+   deriving anyclass (SOP.Generic, SOP.HasDatatypeInfo, Diff)
+:}
+
+>>> d = diff (Bin (Atom 1) Plus (Atom 1)) (Bin (Atom 1) Plus (Atom 2))
+-}
+
 ------------------------------------------------------------
 -- Types
 
@@ -106,6 +128,42 @@ class (Show (SpecialDiffError a), Eq (SpecialDiffError a)) => SpecialDiff a wher
 {- | Configuration type used to tweak the output of 'Generics.Diff.Render.renderDiffResultWith'.
 
 Use 'Generics.Diff.Render.defaultRenderOpts' and the field accessors below to construct.
+
+= Examples
+
+@
+d = diff (Bin (Atom 1) Plus (Atom 1)) (Bin (Atom 1) Plus (Atom 2))
+@
+
+>>> printDiffResultWith defaultRenderOpts d
+Both values use constructor Bin but fields don't match
+In field right:
+  Both values use constructor Atom but fields don't match
+  In field 0 (0-indexed):
+    Not equal
+    Left value:  1
+    Right value: 2
+<BLANKLINE>
+
+>>> printDiffResultWith defaultRenderOpts {indentSize=0} d
+Both values use constructor Bin but fields don't match
+In field right:
+Both values use constructor Atom but fields don't match
+In field 0 (0-indexed):
+Not equal
+Left value:  1
+Right value: 2
+<BLANKLINE>
+
+>>> printDiffResultWith defaultRenderOpts {indentSize=3, numberedLevels=True} d
+1. Both values use constructor Bin but fields don't match
+   In field right:
+   2. Both values use constructor Atom but fields don't match
+      In field 0 (0-indexed):
+      3. Not equal
+         Left value:  1
+         Right value: 2
+<BLANKLINE>
 -}
 data RenderOpts = RenderOpts
   { indentSize :: Natural

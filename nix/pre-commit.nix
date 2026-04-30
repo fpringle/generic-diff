@@ -1,6 +1,6 @@
 let
   sources = import ./sources.nix;
-  nixpkgs = import sources.nixpkgs { };
+  nixpkgs = import ./nixpkgs.nix;
   nix-pre-commit-hooks = import sources.pre-commit-hooks;
 
   haskell-file-pattern = "\\.l?hs(-boot)?$";
@@ -27,6 +27,8 @@ let
         ${executable} "''${!n}"
       done'
     '';
+
+  doctest = nixpkgs.lib.getExe nixpkgs.haskellPackages.doctest;
 in
 nix-pre-commit-hooks.run {
   src = ./.;
@@ -60,13 +62,22 @@ nix-pre-commit-hooks.run {
       files = nix-file-pattern;
     };
 
+    "3-doctest" = {
+      name = "doctest";
+      enable = true;
+      description = "Run doctest to check example in Haddock comments.";
+      pass_filenames = false;
+      entry = "cabal repl generic-diff --with-compiler=${doctest}";
+      stages = [ "pre-push" ];
+    };
+
     # by default, pre-commit fails if a hook modifies files, but doesn't
     # tell us which files have been modified. Smart, right?
     # this workaround runs a `git diff` to print any files that have
     # been modified by previous hooks.
     # NOTE: this should always be the last hook run, so when adding hooks
     # make sure to add them above this one.
-    "3-git-diff" = {
+    "4-git-diff" = {
       name = "git diff";
       enable = true;
       entry = "git diff --name-only --exit-code";
