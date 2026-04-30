@@ -42,4 +42,6 @@ In field right:
     Both values use constructor Atom but fields don't match
     In field 0 (0-indexed):
       Not equal
+      Left value:  1
+      Right value: 2
 ```

@@ -96,75 +96,75 @@ import qualified Type.Reflection as TR
 instance Diff Void where diff = \case {}
 instance Diff () where diff () () = Equal
 instance Diff (Proxy a) where diff Proxy Proxy = Equal
-instance Diff Bool where diff = eqDiff
-instance Diff Ordering where diff = eqDiff
-instance Diff Double where diff = eqDiff
-instance Diff Float where diff = eqDiff
-instance Diff Int where diff = eqDiff
-instance Diff Int8 where diff = eqDiff
-instance Diff Int16 where diff = eqDiff
-instance Diff Int32 where diff = eqDiff
-instance Diff Int64 where diff = eqDiff
-instance Diff Word where diff = eqDiff
-instance Diff Word8 where diff = eqDiff
-instance Diff Word16 where diff = eqDiff
-instance Diff Word32 where diff = eqDiff
-instance Diff Word64 where diff = eqDiff
-instance Diff Version where diff = eqDiff
+instance Diff Bool where diff = eqDiffShow
+instance Diff Ordering where diff = eqDiffShow
+instance Diff Double where diff = eqDiffShow
+instance Diff Float where diff = eqDiffShow
+instance Diff Int where diff = eqDiffShow
+instance Diff Int8 where diff = eqDiffShow
+instance Diff Int16 where diff = eqDiffShow
+instance Diff Int32 where diff = eqDiffShow
+instance Diff Int64 where diff = eqDiffShow
+instance Diff Word where diff = eqDiffShow
+instance Diff Word8 where diff = eqDiffShow
+instance Diff Word16 where diff = eqDiffShow
+instance Diff Word32 where diff = eqDiffShow
+instance Diff Word64 where diff = eqDiffShow
+instance Diff Version where diff = eqDiffShow
 
 instance Diff Char where
-  diff = eqDiff
-  diffList = eqDiff
+  diff = eqDiffShow
+  diffList = eqDiffShow
 
-instance (Eq a) => Diff (Ratio a) where diff = eqDiff
-instance Diff Integer where diff = eqDiff
-instance Diff ThreadId where diff = eqDiff
+instance (Eq a, Show a) => Diff (Ratio a) where diff = eqDiffShow
+instance Diff Integer where diff = eqDiffShow
+instance Diff ThreadId where diff = eqDiffShow
 instance Diff (Chan a) where diff = eqDiff
 instance Diff (MVar a) where diff = eqDiff
 instance Diff (IORef a) where diff = eqDiff
-instance Diff TypeRep where diff = eqDiff
-instance Diff (TR.TypeRep a) where diff = eqDiff
-instance Diff TyCon where diff = eqDiff
+instance Diff TypeRep where diff = eqDiffShow
+instance Diff (TR.TypeRep a) where diff = eqDiffShow
+instance Diff TyCon where diff = eqDiffShow
 instance Diff (STRef s a) where diff = eqDiff
 instance Diff Unique where diff = eqDiff
-instance Diff (ForeignPtr a) where diff = eqDiff
-instance Diff (Ptr a) where diff = eqDiff
-instance Diff (FunPtr a) where diff = eqDiff
-instance Diff IntPtr where diff = eqDiff
-instance Diff WordPtr where diff = eqDiff
+instance Diff (ForeignPtr a) where diff = eqDiffShow
+instance Diff (Ptr a) where diff = eqDiffShow
+instance Diff (FunPtr a) where diff = eqDiffShow
+instance Diff IntPtr where diff = eqDiffShow
+instance Diff WordPtr where diff = eqDiffShow
 instance Diff (StablePtr a) where diff = eqDiff
-instance Diff Handle where diff = eqDiff
-instance Diff HandlePosn where diff = eqDiff
+instance Diff Handle where diff = eqDiffShow
+instance Diff HandlePosn where diff = eqDiffShow
 instance Diff (StableName a) where diff = eqDiff
 instance Diff (TVar a) where diff = eqDiff
-instance Diff Natural where diff = eqDiff
-instance Diff Event where diff = eqDiff
+instance Diff Natural where diff = eqDiffShow
+instance Diff Event where diff = eqDiffShow
 
-instance Diff CChar where diff = eqDiff
-instance Diff CSChar where diff = eqDiff
-instance Diff CUChar where diff = eqDiff
-instance Diff CShort where diff = eqDiff
-instance Diff CUShort where diff = eqDiff
-instance Diff CInt where diff = eqDiff
-instance Diff CUInt where diff = eqDiff
-instance Diff CLong where diff = eqDiff
-instance Diff CULong where diff = eqDiff
-instance Diff CPtrdiff where diff = eqDiff
-instance Diff CSize where diff = eqDiff
-instance Diff CWchar where diff = eqDiff
-instance Diff CSigAtomic where diff = eqDiff
-instance Diff CLLong where diff = eqDiff
-instance Diff CULLong where diff = eqDiff
-instance Diff CIntPtr where diff = eqDiff
-instance Diff CUIntPtr where diff = eqDiff
-instance Diff CIntMax where diff = eqDiff
-instance Diff CUIntMax where diff = eqDiff
-instance Diff CClock where diff = eqDiff
-instance Diff CTime where diff = eqDiff
-instance Diff CUSeconds where diff = eqDiff
-instance Diff CSUSeconds where diff = eqDiff
-instance Diff CFloat where diff = eqDiff
-instance Diff CDouble where diff = eqDiff
+instance Diff CChar where diff = eqDiffShow
+instance Diff CSChar where diff = eqDiffShow
+instance Diff CUChar where diff = eqDiffShow
+instance Diff CShort where diff = eqDiffShow
+instance Diff CUShort where diff = eqDiffShow
+instance Diff CInt where diff = eqDiffShow
+instance Diff CUInt where diff = eqDiffShow
+instance Diff CLong where diff = eqDiffShow
+instance Diff CULong where diff = eqDiffShow
+instance Diff CPtrdiff where diff = eqDiffShow
+instance Diff CSize where diff = eqDiffShow
+instance Diff CWchar where diff = eqDiffShow
+instance Diff CSigAtomic where diff = eqDiffShow
+instance Diff CLLong where diff = eqDiffShow
+instance Diff CULLong where diff = eqDiffShow
+instance Diff CIntPtr where diff = eqDiffShow
+instance Diff CUIntPtr where diff = eqDiffShow
+instance Diff CIntMax where diff = eqDiffShow
+instance Diff CUIntMax where diff = eqDiffShow
+instance Diff CClock where diff = eqDiffShow
+instance Diff CTime where diff = eqDiffShow
+instance Diff CUSeconds where diff = eqDiffShow
+instance Diff CSUSeconds where diff = eqDiffShow
+instance Diff CFloat where diff = eqDiffShow
+instance Diff CDouble where diff = eqDiffShow
 
 instance Diff E0
 instance Diff E1
@@ -174,72 +174,72 @@ instance Diff E6
 instance Diff E9
 instance Diff E12
 
-instance Diff T.Text where diff = eqDiff
-instance Diff TL.Text where diff = eqDiff
-instance Diff TLB.Builder where diff = eqDiff
-instance Diff UnicodeException where diff = eqDiff
+instance Diff T.Text where diff = eqDiffShow
+instance Diff TL.Text where diff = eqDiffShow
+instance Diff TLB.Builder where diff = eqDiffShow
+instance Diff UnicodeException where diff = eqDiffShow
 
-instance Diff ArithException where diff = eqDiff
-instance Diff ArrayException where diff = eqDiff
-instance Diff Associativity where diff = eqDiff
-instance Diff AsyncException where diff = eqDiff
-instance Diff BlockReason where diff = eqDiff
-instance Diff BufferMode where diff = eqDiff
+instance Diff ArithException where diff = eqDiffShow
+instance Diff ArrayException where diff = eqDiffShow
+instance Diff Associativity where diff = eqDiffShow
+instance Diff AsyncException where diff = eqDiffShow
+instance Diff BlockReason where diff = eqDiffShow
+instance Diff BufferMode where diff = eqDiffShow
 instance Diff BufferState where diff = eqDiff
 #if MIN_VERSION_base(4,17,0)
-instance Diff ByteArray where diff = eqDiff
+instance Diff ByteArray where diff = eqDiffShow
 #endif
-instance Diff ByteOrder where diff = eqDiff
-instance Diff CBool where diff = eqDiff
-instance Diff (Coercion a b) where diff = eqDiff
+instance Diff ByteOrder where diff = eqDiffShow
+instance Diff CBool where diff = eqDiffShow
+instance Diff (Coercion a b) where diff = eqDiffShow
 #if MIN_VERSION_base(4,18,0)
-instance Diff (ConstPtr a) where diff = eqDiff
+instance Diff (ConstPtr a) where diff = eqDiffShow
 #endif
-instance Diff DataRep where diff = eqDiff
-instance Diff G.DecidedStrictness where diff = eqDiff
+instance Diff DataRep where diff = eqDiffShow
+instance Diff G.DecidedStrictness where diff = eqDiffShow
 instance Diff Errno where diff = eqDiff
-instance Diff ErrorCall where diff = eqDiff
-instance Diff ExitCode where diff = eqDiff
-instance Diff FdKey where diff = eqDiff
-instance Diff Fingerprint where diff = eqDiff
-instance Diff G.Fixity where diff = eqDiff
-instance Diff GeneralCategory where diff = eqDiff
+instance Diff ErrorCall where diff = eqDiffShow
+instance Diff ExitCode where diff = eqDiffShow
+instance Diff FdKey where diff = eqDiffShow
+instance Diff Fingerprint where diff = eqDiffShow
+instance Diff G.Fixity where diff = eqDiffShow
+instance Diff GeneralCategory where diff = eqDiffShow
 #if MIN_VERSION_base(4,18,0)
-instance Diff InfoProv where diff = eqDiff
+instance Diff InfoProv where diff = eqDiffShow
 #endif
 instance Diff (IOArray i e) where diff = eqDiff
 instance Diff IODeviceType where diff = eqDiff
-instance Diff IOErrorType where diff = eqDiff
-instance Diff IOException where diff = eqDiff
-instance Diff IOMode where diff = eqDiff
-instance Diff Lexeme where diff = eqDiff
-instance Diff Lifetime where diff = eqDiff
-instance Diff MaskingState where diff = eqDiff
+instance Diff IOErrorType where diff = eqDiffShow
+instance Diff IOException where diff = eqDiffShow
+instance Diff IOMode where diff = eqDiffShow
+instance Diff Lexeme where diff = eqDiffShow
+instance Diff Lifetime where diff = eqDiffShow
+instance Diff MaskingState where diff = eqDiffShow
 #if MIN_VERSION_base(4,17,0)
 instance Diff (MutableByteArray a) where diff = eqDiff
 #endif
-instance Diff NewlineMode where diff = eqDiff
-instance Diff Newline where diff = eqDiff
+instance Diff NewlineMode where diff = eqDiffShow
+instance Diff Newline where diff = eqDiffShow
 #if MIN_VERSION_base(4,16,0)
-instance Diff (OrderingI a b) where diff = eqDiff
+instance Diff (OrderingI a b) where diff = eqDiffShow
 #endif
-instance Diff SeekMode where diff = eqDiff
+instance Diff SeekMode where diff = eqDiffShow
 #if MIN_VERSION_base(4,16,0)
-instance Diff SomeChar where diff = eqDiff
+instance Diff SomeChar where diff = eqDiffShow
 #endif
-instance Diff SomeNat where diff = eqDiff
-instance Diff SomeSymbol where diff = eqDiff
-instance Diff SrcLoc where diff = eqDiff
+instance Diff SomeNat where diff = eqDiffShow
+instance Diff SomeSymbol where diff = eqDiffShow
+instance Diff SrcLoc where diff = eqDiffShow
 #if MIN_VERSION_base(4,17,0)
-instance Diff StackEntry where diff = eqDiff
+instance Diff StackEntry where diff = eqDiffShow
 #endif
 instance Diff (STArray s i a) where diff = eqDiff
-instance Diff ThreadStatus where diff = eqDiff
+instance Diff ThreadStatus where diff = eqDiffShow
 instance Diff TimeoutKey where diff = eqDiff
 #if MIN_VERSION_base(4,14,0)
-instance Diff Timeout where diff = eqDiff
+instance Diff Timeout where diff = eqDiffShow
 #endif
-instance Diff TrName where diff = eqDiff
+instance Diff TrName where diff = eqDiffShow
 
 {- FOURMOLU_ENABLE -}
 

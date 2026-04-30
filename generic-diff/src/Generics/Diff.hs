@@ -127,13 +127,16 @@ uses the @Right@ constructor"! And of course, once we have one step of recursion
 
 The 'Diff' class encapsulates the above behaviour with 'diff'. It's very strongly recommended that you don't
 implement 'diff' yourself, but use the default implementation using 'Generics.SOP.Generic', which is just 'gdiff'.
-In case you might want to implement 'diff' yourself, there are three other functions you might want to use.
+In case you might want to implement 'diff' yourself, there are five other functions you might want to use.
 
-- 'eqDiff' simply delegates the entire process to '(==)', and will only ever give 'Equal' or 'TopLevelNotEqual'. This is
-no more useful than 'Eq', and should only be used for primitive types (e.g. all numeric types like 'Char' and 'Int')
-use 'eqDiff', since they don't really have ADTs or recursion.
+- 'eqDiffShow' simply delegates the entire process to '(==)', and will only ever give 'Equal' or 'TopLevelNotEqualShow'. This is
+no more useful than 'Eq', and should only be used for primitive types (e.g. all numeric types like 'Char' and 'Int'
+use 'eqDiff', since they don't really have ADTs or recursion).
 
-- 'gdiffTopLevel' does the above process, but without recursion. In other words each pair of fields is compared using
+- 'eqDiff' is the same as 'eqDiffShow', but uses 'TopLevelNotEqual'. This should only be used for primitive types that
+do not have 'Show' instances.
+
+- 'gdiffTopLevelShow' does the above process, but without recursion. In other words each pair of fields is compared using
 '(==)'. This is definitely better than 'Eq', by one "level". One situation when this might be useful is when your
 type refers to types from other libraries, and you want to avoid orphan 'Diff' instances for those types. Another
 is when the types of the fields are "small" enough that we don't care about recursing into them. For example:
@@ -159,6 +162,9 @@ instance 'Diff' Request where
   'diff' = 'gdiffTopLevel'
 @
 
+- 'gdiffTopLevel' is the same as 'gdiffTopLevelShow', but uses 'eqDiffShow' instead of 'eqDiff'. This should only be used
+for primitive types that do not have 'Show' instances.
+
 - 'diffWithSpecial' lets us handle edge cases for funky types with unusual 'Eq' instances or preserved
 invariants. See "Generics.Diff.Special".
 
@@ -172,8 +178,10 @@ module Generics.Diff
 
     -- ** Implementing diff
   , gdiff
+  , gdiffTopLevelShow
   , gdiffTopLevel
   , gdiffWith
+  , eqDiffShow
   , eqDiff
 
     -- * Types

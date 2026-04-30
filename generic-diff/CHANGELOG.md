@@ -7,6 +7,10 @@ and this project adheres to [Haskell Package Versioning Policy](https://pvp.hask
 
 ## [Unreleased]
 
+### Changed
+
+- New `DiffError` constructor that includes a `Text` showing the two values compared at the top level in [#18](https://github.com/fpringle/generic-diff/pull/18).
+
 ## [0.1.0.1] - 01.02.2026
 
 ### Changed

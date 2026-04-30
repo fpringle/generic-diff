@@ -106,6 +106,12 @@ diffResultDoc = \case
 diffErrorDoc :: forall a. DiffError a -> Doc
 diffErrorDoc = \case
   TopLevelNotEqual -> linesDoc (pure "Not equal")
+  TopLevelNotEqualShow l r ->
+    linesDoc $
+      "Not equal"
+        :| [ "Left value:  " <> TB.fromText l
+           , "Right value: " <> TB.fromText r
+           ]
   Nested err -> diffErrorNestedDoc err
   DiffSpecial err -> renderSpecialDiffError @a err
 
@@ -118,6 +124,12 @@ For example:
 ghci> 'TL.putStrLn' . 'TB.toLazyText' . 'renderDoc' 'defaultRenderOpts' 0 . 'listDiffErrorDoc' "list" $ 'DiffAtIndex' 3 'TopLevelNotEqual'
 Diff at list index 3 (0-indexed)
   Not equal
+
+ghci> 'TL.putStrLn' . 'TB.toLazyText' . 'renderDoc' 'defaultRenderOpts' 0 . 'listDiffErrorDoc' "list" $ 'DiffAtIndex' 3 $ 'TopLevelNotEqual' \"1\" \"2\"
+Diff at list index 3 (0-indexed)
+  Not equal
+  Left value:  1
+  Right value: 2
 
 ghci> TL.putStrLn . TB.toLazyText . renderDoc defaultRenderOpts 0 . listDiffErrorDoc "non-empty list" $ WrongLengths 3 5
 non-empty lists are wrong lengths
