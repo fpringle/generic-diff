@@ -43,6 +43,12 @@ import qualified Data.Text.Lazy.IO as TL
 import Generics.Diff.Type
 import Generics.SOP as SOP
 
+{- $setup
+>>> import Generics.Diff
+>>> import qualified Data.Text.Lazy.Builder as TB
+>>> import qualified Data.Text.Lazy.IO as TL
+-}
+
 -- | Sensible rendering defaults. No numbers, 2-space indentation.
 defaultRenderOpts :: RenderOpts
 defaultRenderOpts =
@@ -120,22 +126,23 @@ diffErrorDoc = \case
 The first argument gives us a name for the type of list, for clearer output.
 For example:
 
-@
-ghci> 'TL.putStrLn' . 'TB.toLazyText' . 'renderDoc' 'defaultRenderOpts' 0 . 'listDiffErrorDoc' "list" $ 'DiffAtIndex' 3 'TopLevelNotEqual'
+>>> TL.putStrLn . TB.toLazyText . renderDoc defaultRenderOpts 0 . listDiffErrorDoc "list" $ DiffAtIndex 3 TopLevelNotEqual
 Diff at list index 3 (0-indexed)
   Not equal
+<BLANKLINE>
 
-ghci> 'TL.putStrLn' . 'TB.toLazyText' . 'renderDoc' 'defaultRenderOpts' 0 . 'listDiffErrorDoc' "list" $ 'DiffAtIndex' 3 $ 'TopLevelNotEqual' \"1\" \"2\"
+>>> TL.putStrLn . TB.toLazyText . renderDoc defaultRenderOpts 0 . listDiffErrorDoc "list" $ DiffAtIndex 3 $ TopLevelNotEqual "1" "2"
 Diff at list index 3 (0-indexed)
   Not equal
   Left value:  1
   Right value: 2
+<BLANKLINE>
 
-ghci> TL.putStrLn . TB.toLazyText . renderDoc defaultRenderOpts 0 . listDiffErrorDoc "non-empty list" $ WrongLengths 3 5
+>>> TL.putStrLn . TB.toLazyText . renderDoc defaultRenderOpts 0 . listDiffErrorDoc "non-empty list" $ WrongLengths 3 5
 non-empty lists are wrong lengths
 Length of left list: 3
 Length of right list: 5
-@
+<BLANKLINE>
 -}
 listDiffErrorDoc :: TB.Builder -> ListDiffError a -> Doc
 listDiffErrorDoc lst = \case
