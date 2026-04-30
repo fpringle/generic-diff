@@ -1,4 +1,5 @@
 {-# LANGUAGE EmptyCase #-}
+{-# LANGUAGE NoOverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints -Wno-orphans #-}
 
 module Generics.Diff.Class
@@ -22,6 +23,7 @@ where
 
 import Data.SOP
 import Data.SOP.NP
+import Data.String (fromString)
 import qualified Data.Text as T
 import qualified GHC.Generics as G
 import Generics.Diff.Render
@@ -152,7 +154,7 @@ diffWithSpecial l r = maybe Equal (Error . DiffSpecial) $ specialDiff l r
 instance (Diff a) => SpecialDiff [a] where
   type SpecialDiffError [a] = ListDiffError a
   specialDiff = diffListWith diff
-  renderSpecialDiffError = listDiffErrorDoc "list"
+  renderSpecialDiffError = listDiffErrorDoc (fromString "list")
 
 {- | Given two lists and a way to 'diff' the elements of the list,
 return a 'ListDiffError'. Used to implement 'specialDiff' for list-like types.
@@ -319,3 +321,5 @@ shiftDiffError :: DiffErrorNested xs -> DiffErrorNested (x ': xs)
 shiftDiffError = \case
   WrongConstructor xs ys -> WrongConstructor (S xs) (S ys)
   FieldMismatch (DiffAtField ns) -> FieldMismatch (DiffAtField (S ns))
+
+{-# ANN module "doctest-parallel: --no-implicit-module-import" #-}
