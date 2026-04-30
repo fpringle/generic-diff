@@ -36,6 +36,7 @@ expr2 = Bin (Atom 1) Plus (Bin (Atom 1) Plus (Atom 2))
 
 ```haskell
 ghci> printDiffResult $ diff expr1 expr2
+Both values use constructor Bin but fields don't match
 In field right:
   Both values use constructor Bin but fields don't match
   In field right:
